@@ -4,16 +4,17 @@ from PyQt5.QtCore import Qt, QPointF, QLineF
 
 
 class RelationshipObject(QGraphicsRectItem):
-    def __init__(self, x, y, r, h):
-        super().__init__(0, 0, r, h)
+    def __init__(self, x, y, text):
+        self.r = 100
+        self.h = 100
+        super().__init__(0, 0, self.r, self.h)
         self.setPos(x, y)
         self.setRotation(45)
         self.setAcceptHoverEvents(True)
         self.x = x
         self.y = y
-        self.h = h
 
-        self.pLineEdit = QLineEdit("Relationship 1")
+        self.pLineEdit = QLineEdit(text)
         self.pLineEdit.setFrame(False)
         self.pLineEdit.setGeometry(0, 75, 105, 35)
         self.pMyItem = QGraphicsProxyWidget(self)
@@ -52,18 +53,18 @@ class RelationshipObject(QGraphicsRectItem):
 
 
 class RectObject(QGraphicsRectItem):
-    def __init__(self, x, y, r, h):
-        super().__init__(0, 0, r, h)
+    def __init__(self, x, y, text):
+        self.r = 150
+        self.h = 100
+        super().__init__(0, 0, self.r, self.h)
         self.setPos(x, y)
-        self.r = r
-        self.h = h
         self.x = x
         self.y = y
         self.x1 = self.x + self.r
         self.y1 = self.y + self.h
         self.setAcceptHoverEvents(True)
 
-        self.pLineEdit = QLineEdit("Entity 1")
+        self.pLineEdit = QLineEdit(text)
         self.pLineEdit.setFrame(False)
         self.pLineEdit.setGeometry(1, 35, 149, 35)
         self.pMyItem = QGraphicsProxyWidget(self)
@@ -134,18 +135,19 @@ class RectObject(QGraphicsRectItem):
         return self.x1, self.y1-50
 
 class EllipseObject(QGraphicsEllipseItem):
-    def __init__(self, x, y, r, h):
-        super().__init__(0, 0, r, h)
+    def __init__(self, x, y, text):
+        self.r = 150
+        self.h = 100
+        super().__init__(0, 0, self.r, self.h)
         self.setPos(x, y)
         self.setAcceptHoverEvents(True)
         self.x = x
         self.y = y
-        self.h = h
         self.line = None
 
-        self.pLineEdit = QLineEdit("Attribute 1")
+        self.pLineEdit = QLineEdit(text)
         self.pLineEdit.setFrame(False)
-        self.pLineEdit.setGeometry(10, h-65, r-20, 35)
+        self.pLineEdit.setGeometry(10, 35, 120, 35)
         self.pMyItem = QGraphicsProxyWidget(self)
         self.pMyItem.setWidget(self.pLineEdit)
 
@@ -215,11 +217,11 @@ class GraphicView(QGraphicsView):
         self.setScene(self.scene)       
         self.setSceneRect(0, 0, 1200, 1000)
 
-        self.moveObject = RectObject(50, 50, 150, 100)
-        self.entity2 = RectObject(700, 400, 150, 100)
-        self.moveObject2 = EllipseObject(300, 100, 150, 100)
-        self.att2 = EllipseObject(600, 100, 150, 100)
-        self.relationship = RelationshipObject(500, 500, 100, 100)
+        self.moveObject = RectObject(50, 50, "Zviera")
+        self.entity2 = RectObject(700, 400, "Clovek")
+        self.moveObject2 = EllipseObject(300, 100, "telefonne cislo")
+        self.att2 = EllipseObject(600, 100, "pohlavie")
+        self.relationship = RelationshipObject(500, 500, "pracuje")
 
         self.line1 = ConnectingLine(300, 300, 300, -20)
         self.line2 = ConnectingLine(300, 300, 300, -20)
