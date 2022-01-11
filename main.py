@@ -37,7 +37,6 @@ class RelationshipObject(QGraphicsRectItem):
         print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
 
 
-
 class RectObject(QGraphicsRectItem):
     def __init__(self, x, y, r, h):
         super().__init__(0, 0, r, h)
@@ -55,20 +54,30 @@ class RectObject(QGraphicsRectItem):
         self.pLineEdit.setGeometry(x-(int(h/2))+1, y-(int(h/5)), r-1, int(h/2)-10)
         self.pMyItem = QGraphicsProxyWidget(self)
         self.pMyItem.setWidget(self.pLineEdit)
-        self.line = None
-        self.att = None
+        self.lines = []
+        #self.line = None
 
     def addLine(self, line, att):
-        self.line = line
-        self.att = att
+        #self.line = line
+        self.lines.append(line)
+        """
         self.line.setEntity(self)
         self.att.setLine(line)
         self.line.setAtt(att)
         self.drawLine()
+        """
+        att.setLine(line)
+        line.setEntity(self)
+        line.setAtt(att)
+        self.drawLine()
 
     def drawLine(self):
+        """
         if self.line:
             self.line.changePos(self.x1, self.y1-50)
+        """
+        for line in self.lines:
+            line.changePos(self.x1, self.y1-50)
 
     def mousePressEvent(self, event):
         pass
@@ -166,13 +175,18 @@ class GraphicView(QGraphicsView):
 
         self.moveObject = RectObject(50, 50, 150, 100)
         self.moveObject2 = EllipseObject(300, 100, 150, 100)
+        self.att2 = EllipseObject(600, 100, 150, 100)
         self.relationship = RelationshipObject(500, 500, 100, 100)
 
         self.line1 = ConnectingLine(300, 300, 300, -20)
+        self.line2 = ConnectingLine(300, 300, 300, -20)
 
         self.moveObject.addLine(self.line1, self.moveObject2)
+        self.moveObject.addLine(self.line2, self.att2)
 
+        self.scene.addItem(self.att2)
         self.scene.addItem(self.line1)
+        self.scene.addItem(self.line2)
         self.scene.addItem(self.relationship)
         self.scene.addItem(self.moveObject)
         self.scene.addItem(self.moveObject2)
