@@ -21,7 +21,7 @@ class RelationshipObject(QGraphicsRectItem):
         self.pMyItem.setRotation(-45)
 
         self.entity = None
-        self.line = None
+        self.lines = []
 
     def mousePressEvent(self, event):
         pass
@@ -37,15 +37,15 @@ class RelationshipObject(QGraphicsRectItem):
         self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
         self.x = updated_cursor_x
         self.y = updated_cursor_y
-        if self.line:
-            self.line.changeRelPos(self.x, self.y)
+        for line in self.lines:
+            line.changeRelPos(self.x, self.y)
 
 
     def mouseReleaseEvent(self, event):
         print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
 
     def setLine(self, line):
-        self.line = line
+        self.lines.append(line)
 
     def getPos(self):
         return self.x, self.y + int((self.h/2))
@@ -69,11 +69,12 @@ class RectObject(QGraphicsRectItem):
         self.pMyItem = QGraphicsProxyWidget(self)
         self.pMyItem.setWidget(self.pLineEdit)
         self.lines = []
-        self.relLines = None
+        self.relLines = []
         #self.line = None
 
     def addRelLine(self, line, rel):
-        self.relLines = line
+        #self.relLines = line
+        self.relLines.append(line)
         rel.setLine(line)
         line.setEntity(self)
         line.setRel(rel)
@@ -101,10 +102,14 @@ class RectObject(QGraphicsRectItem):
         for line in self.lines:
             line.changePos(self.x1, self.y1-50)
 
+        """
         if self.relLines:
             print("pridana")
 
             self.relLines.changePos(self.x1, self.y1-50)
+        """
+        for relLine in self.relLines:
+            relLine.changePos(self.x1, self.y1-50)
 
     def mousePressEvent(self, event):
         pass
@@ -219,11 +224,14 @@ class GraphicView(QGraphicsView):
         self.line1 = ConnectingLine(300, 300, 300, -20)
         self.line2 = ConnectingLine(300, 300, 300, -20)
         self.relLine = ConnectingLine(300, 300, 300, -20)
+        self.relLine2 = ConnectingLine(300, 300, 300, -20)
 
         self.moveObject.addLine(self.line1, self.moveObject2)
         self.moveObject.addLine(self.line2, self.att2)
         self.moveObject.addRelLine(self.relLine, self.relationship)
+        self.entity2.addRelLine(self.relLine2, self.relationship)
 
+        self.scene.addItem(self.relLine2)
         self.scene.addItem(self.entity2)
         self.scene.addItem(self.relLine)
         self.scene.addItem(self.att2)
