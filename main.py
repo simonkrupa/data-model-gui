@@ -3,6 +3,41 @@ from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphi
 from PyQt5.QtCore import Qt, QPointF, QLineF
 
 
+class RelationshipObject(QGraphicsRectItem):
+    def __init__(self, x, y, r, h):
+        super().__init__(0, 0, r, h)
+        self.setPos(x, y)
+        self.setRotation(45)
+        self.setAcceptHoverEvents(True)
+
+        self.pLineEdit = QLineEdit("Relationship 1")
+        self.pLineEdit.setFrame(False)
+        self.pLineEdit.setGeometry(0, 75, 105, 35)
+        self.pMyItem = QGraphicsProxyWidget(self)
+        self.pMyItem.setWidget(self.pLineEdit)
+        self.pMyItem.setRotation(-45)
+
+        self.entity = None
+
+    def mousePressEvent(self, event):
+        pass
+
+    def mouseMoveEvent(self, event):
+        orig_cursor_position = event.lastScenePos()
+        updated_cursor_position = event.scenePos()
+
+        orig_position = self.scenePos()
+
+        updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
+        updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
+        self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+
+
+    def mouseReleaseEvent(self, event):
+        print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
+
+
+
 class RectObject(QGraphicsRectItem):
     def __init__(self, x, y, r, h):
         super().__init__(0, 0, r, h)
@@ -131,12 +166,14 @@ class GraphicView(QGraphicsView):
 
         self.moveObject = RectObject(50, 50, 150, 100)
         self.moveObject2 = EllipseObject(300, 100, 150, 100)
+        self.relationship = RelationshipObject(500, 500, 100, 100)
 
         self.line1 = ConnectingLine(300, 300, 300, -20)
 
         self.moveObject.addLine(self.line1, self.moveObject2)
 
         self.scene.addItem(self.line1)
+        self.scene.addItem(self.relationship)
         self.scene.addItem(self.moveObject)
         self.scene.addItem(self.moveObject2)
         #self.scene.addItem(self.line)
