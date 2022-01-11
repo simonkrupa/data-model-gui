@@ -9,6 +9,9 @@ class RelationshipObject(QGraphicsRectItem):
         self.setPos(x, y)
         self.setRotation(45)
         self.setAcceptHoverEvents(True)
+        self.x = x
+        self.y = y
+        self.h = h
 
         self.pLineEdit = QLineEdit("Relationship 1")
         self.pLineEdit.setFrame(False)
@@ -18,6 +21,7 @@ class RelationshipObject(QGraphicsRectItem):
         self.pMyItem.setRotation(-45)
 
         self.entity = None
+        self.line = None
 
     def mousePressEvent(self, event):
         pass
@@ -31,10 +35,20 @@ class RelationshipObject(QGraphicsRectItem):
         updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
         updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
         self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+        self.x = updated_cursor_x
+        self.y = updated_cursor_y
+        if self.line:
+            self.line.changeRelPos(self.x, self.y)
 
 
     def mouseReleaseEvent(self, event):
         print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
+
+    def setLine(self, line):
+        self.line = line
+
+    def getPos(self):
+        return self.x, self.y + int((self.h/2))
 
 
 class RectObject(QGraphicsRectItem):
@@ -51,11 +65,19 @@ class RectObject(QGraphicsRectItem):
 
         self.pLineEdit = QLineEdit("Entity 1")
         self.pLineEdit.setFrame(False)
-        self.pLineEdit.setGeometry(x-(int(h/2))+1, y-(int(h/5)), r-1, int(h/2)-10)
+        self.pLineEdit.setGeometry(1, 35, 149, 35)
         self.pMyItem = QGraphicsProxyWidget(self)
         self.pMyItem.setWidget(self.pLineEdit)
         self.lines = []
+        self.relLines = None
         #self.line = None
+
+    def addRelLine(self, line, rel):
+        self.relLines = line
+        rel.setLine(line)
+        line.setEntity(self)
+        line.setRel(rel)
+        self.drawLine()
 
     def addLine(self, line, att):
         #self.line = line
@@ -78,6 +100,11 @@ class RectObject(QGraphicsRectItem):
         """
         for line in self.lines:
             line.changePos(self.x1, self.y1-50)
+
+        if self.relLines:
+            print("pridana")
+
+            self.relLines.changePos(self.x1, self.y1-50)
 
     def mousePressEvent(self, event):
         pass
@@ -149,21 +176,31 @@ class ConnectingLine(QGraphicsLineItem):
         self.setLine(x, y, r, h)
         self.att = None
         self.entity = None
+        self.rel = None
 
     def changePos(self, x, y):
-        att_x, att_y = self.att.getPos()
-        print(x, y, att_x, att_y)
-        self.setLine(x, y, att_x, att_y)
+        if self.att:
+            uni_x, uni_y = self.att.getPos()
+        elif self.rel:
+            uni_x, uni_y = self.rel.getPos()
+        self.setLine(x, y, uni_x, uni_y)
 
     def changeAttPos(self, att_x, att_y):
         x, y = self.entity.getPos()
         self.setLine(x, y, att_x, att_y+50)
+
+    def changeRelPos(self, rel_x, rel_y):
+        x, y = self.entity.getPos()
+        self.setLine(x, y, rel_x, rel_y+50)
 
     def setAtt(self, att):
         self.att = att
 
     def setEntity(self, entity):
         self.entity = entity
+
+    def setRel(self, rel):
+        self.rel = rel
 
 class GraphicView(QGraphicsView):
     def __init__(self):
@@ -174,16 +211,21 @@ class GraphicView(QGraphicsView):
         self.setSceneRect(0, 0, 1200, 1000)
 
         self.moveObject = RectObject(50, 50, 150, 100)
+        self.entity2 = RectObject(700, 400, 150, 100)
         self.moveObject2 = EllipseObject(300, 100, 150, 100)
         self.att2 = EllipseObject(600, 100, 150, 100)
         self.relationship = RelationshipObject(500, 500, 100, 100)
 
         self.line1 = ConnectingLine(300, 300, 300, -20)
         self.line2 = ConnectingLine(300, 300, 300, -20)
+        self.relLine = ConnectingLine(300, 300, 300, -20)
 
         self.moveObject.addLine(self.line1, self.moveObject2)
         self.moveObject.addLine(self.line2, self.att2)
+        self.moveObject.addRelLine(self.relLine, self.relationship)
 
+        self.scene.addItem(self.entity2)
+        self.scene.addItem(self.relLine)
         self.scene.addItem(self.att2)
         self.scene.addItem(self.line1)
         self.scene.addItem(self.line2)
