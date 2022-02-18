@@ -1,5 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit
+from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
+    QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow
 from PyQt5.QtCore import Qt, QPointF, QLineF
 
 
@@ -188,17 +189,59 @@ class ConnectingLine(QGraphicsLineItem):
     def changePos(self, x, y):
         if self.att:
             uni_x, uni_y = self.att.getPos()
+            if uni_y - 50 <= y + 50 and y - 50 <= uni_y + 50 and x > uni_x:
+                self.setLine(x - 150, y, uni_x + 150, uni_y)
+            elif uni_y - 50 <= y + 50 and y - 50 <= uni_y + 50 and x < uni_x:
+                self.setLine(x, y, uni_x, uni_y)
+            elif y > uni_y + 50:
+                self.setLine(x - 75, y - 50, uni_x + 75, uni_y + 50)
+            elif y < uni_y - 50:
+                self.setLine(x - 75, y + 50, uni_x + 75, uni_y - 50)
+            else:
+                print(x, y, uni_x, uni_y)
+                self.setLine(x, y, uni_x, uni_y)
         elif self.rel:
             uni_x, uni_y = self.rel.getPos()
-        self.setLine(x, y, uni_x, uni_y)
+            if uni_y - 50 <= y + 50 and y - 50 <= uni_y + 50 and x > uni_x:
+                self.setLine(x - 150, y, uni_x + 70, uni_y+20)
+            elif uni_y - 50 <= y + 50 and y - 50 <= uni_y + 50 and x < uni_x:
+                self.setLine(x, y, uni_x-70, uni_y+20)
+            elif y > uni_y + 50:
+                self.setLine(x - 75, y - 50, uni_x, uni_y + 90)
+            elif y < uni_y - 50:
+                self.setLine(x - 75, y + 50, uni_x, uni_y - 50)
+            else:
+                print(x, y, uni_x, uni_y)
+                self.setLine(x, y, uni_x, uni_y)
+
+        #self.setLine(x, y, uni_x, uni_y)
 
     def changeAttPos(self, att_x, att_y):
         x, y = self.entity.getPos()
-        self.setLine(x, y, att_x, att_y+50)
+        if y > att_y-50 and att_y+50 > y - 100 and att_x < x - 150:
+            self.setLine(x-150, y, att_x+150,att_y+50)
+        elif y > att_y-50 and att_y+50 > y - 100 and att_x > x:
+            self.setLine(x, y, att_x, att_y+50)
+        elif att_y < y-100:
+            self.setLine(x-75, y-50, att_x+75,att_y+100)
+        elif att_y > y:
+            self.setLine(x-75,y+50,att_x+75,att_y)
+        else:
+            self.setLine(x, y, att_x, att_y+50)
 
     def changeRelPos(self, rel_x, rel_y):
         x, y = self.entity.getPos()
-        self.setLine(x, y, rel_x, rel_y+50)
+        #self.setLine(x, y, rel_x, rel_y+50)
+        if y > rel_y-50 and rel_y+50 > y - 140 and rel_x < x - 150:
+            self.setLine(x-150, y, rel_x+70,rel_y+70)
+        elif y > rel_y-50 and rel_y+50 > y - 140 and rel_x > x:
+            self.setLine(x, y, rel_x-70, rel_y+70)
+        elif rel_y < y-100:
+            self.setLine(x-75, y-50, rel_x,rel_y+140)
+        elif rel_y > y:
+            self.setLine(x-75,y+50,rel_x,rel_y)
+        else:
+            self.setLine(x, y, rel_x, rel_y+50)
 
     def setAtt(self, att):
         self.att = att
@@ -246,6 +289,8 @@ class GraphicView(QGraphicsView):
 
 
 app = QApplication(sys.argv)
+win = QMainWindow()
+
 view = GraphicView()
 
 view.show()
