@@ -1,9 +1,9 @@
 import sys
 
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
     QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
-    QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout
+    QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit
 from PyQt5.QtCore import Qt, QPointF, QLineF
 
 
@@ -261,14 +261,14 @@ class ConnectingLine(QGraphicsLineItem):
 
 
 class GraphicView(QGraphicsView):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, x):
+        super().__init__(x)
         self.flag = False
         self.prev = None
         self.delete_flag = False
         self.scene = QGraphicsScene()
-        self.setScene(self.scene)       
-        self.setSceneRect(0, 0, 500, 500)
+        self.setScene(self.scene)
+        #self.setSceneRect(0, 0, 500, 500)
 
         self.moveObject = RectObject(50, 50, "Zviera")
         self.entity2 = RectObject(700, 400, "Clovek")
@@ -376,13 +376,38 @@ class MainWin(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Data model generator")
-        self.setGeometry(300,200,640,520)
+        #self.setGeometry(0, 0, 1280, 800)
+        self.setFixedSize(1280, 1000)
+
+        self.view = GraphicView(self)
+        self.view.setGeometry(0, 25, 1280, 700)
 
         self.exit_action, self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action = self.toolbar_actions()
         self.toolbar = self.create_toolbar()
 
-        self.view = GraphicView()
-        self.setCentralWidget(self.view)
+        self.start_button = QPushButton("Start", self)
+        self.start_button.setGeometry(0, 725, 125, 90)
+
+        self.delete_button = QPushButton("Delete", self)
+        self.delete_button.setGeometry(0, 815, 125, 90)
+        self.delete_button.clicked.connect(self.delete_text)
+
+        self.clear_button = QPushButton("Clear", self)
+        self.clear_button.setGeometry(0, 905, 125, 95)
+        self.clear_button.clicked.connect(self.clear_view)
+
+        self.text_area = QPlainTextEdit(self)
+        font = QFont()
+        font.setPointSize(12)
+        self.text_area.setFont(font)
+        self.text_area.setPlaceholderText("Zadajte text.")
+        self.text_area.setGeometry(125, 725, 1155, 275)
+
+    def clear_view(self):
+        self.view.scene.clear()
+
+    def delete_text(self):
+        self.text_area.clear()
 
     def trigger_delete(self):
         self.view.delete()
@@ -429,6 +454,7 @@ class MainWin(QMainWindow):
         toolbar.addAction(self.relationship_action)
         toolbar.addAction(self.connect_line)
         toolbar.addAction(self.delete_action)
+        print(toolbar.height())
         return toolbar
 
 
