@@ -1,6 +1,9 @@
 import sys
+
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
-    QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow
+    QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
+    QListWidget, QListWidgetItem, QGraphicsItemGroup
 from PyQt5.QtCore import Qt, QPointF, QLineF
 
 
@@ -135,6 +138,7 @@ class RectObject(QGraphicsRectItem):
     def getPos(self):
         return self.x1, self.y1-50
 
+
 class EllipseObject(QGraphicsEllipseItem):
     def __init__(self, x, y, text):
         self.r = 150
@@ -146,6 +150,8 @@ class EllipseObject(QGraphicsEllipseItem):
         self.y = y
         self.line = None
 
+        self.text = text
+
         self.pLineEdit = QLineEdit(text)
         self.pLineEdit.setFrame(False)
         self.pLineEdit.setGeometry(10, 35, 120, 35)
@@ -153,7 +159,7 @@ class EllipseObject(QGraphicsEllipseItem):
         self.pMyItem.setWidget(self.pLineEdit)
 
     def mousePressEvent(self, event):
-        pass
+        print(self.text)
 
     def mouseMoveEvent(self, event):
         orig_cursor_position = event.lastScenePos()
@@ -177,6 +183,7 @@ class EllipseObject(QGraphicsEllipseItem):
 
     def setLine(self, line):
         self.line = line
+
 
 class ConnectingLine(QGraphicsLineItem):
     def __init__(self, x, y, r, h):
@@ -252,10 +259,12 @@ class ConnectingLine(QGraphicsLineItem):
     def setRel(self, rel):
         self.rel = rel
 
+
 class GraphicView(QGraphicsView):
     def __init__(self):
         super().__init__()
-
+        self.flag = False
+        self.prev = None
         self.scene = QGraphicsScene()
         self.setScene(self.scene)       
         self.setSceneRect(0, 0, 1200, 1000)
@@ -264,6 +273,7 @@ class GraphicView(QGraphicsView):
         self.entity2 = RectObject(700, 400, "Clovek")
         self.moveObject2 = EllipseObject(300, 100, "telefonne cislo")
         self.att2 = EllipseObject(600, 100, "pohlavie")
+        self.att3 = EllipseObject(100, 100, "vek")
         self.relationship = RelationshipObject(500, 500, "pracuje")
 
         self.line1 = ConnectingLine(300, 300, 300, -20)
@@ -277,6 +287,7 @@ class GraphicView(QGraphicsView):
         self.entity2.addRelLine(self.relLine2, self.relationship)
 
         self.scene.addItem(self.relLine2)
+        self.scene.addItem(self.att3)
         self.scene.addItem(self.entity2)
         self.scene.addItem(self.relLine)
         self.scene.addItem(self.att2)
@@ -287,11 +298,93 @@ class GraphicView(QGraphicsView):
         self.scene.addItem(self.moveObject2)
         #self.scene.addItem(self.line)
 
+    def mousePressEvent(self, event):
+        if self.flag:
+            item = self.items(event.pos())
+            item = item[0]
+            if item and self.prev:
+                if type(self.prev) != type(item):
+                    connecting_line = ConnectingLine(300, 300, 300, -20)
+                    if isinstance(item, EllipseObject) or isinstance(self.prev, EllipseObject):
+                        if isinstance(self.prev, RectObject) and isinstance(item, EllipseObject):
+                            tmp = item
+                            item = self.prev
+                            self.prev = tmp
+                        item.addLine(connecting_line, self.prev)
+                        self.scene.addItem(connecting_line)
+                    elif isinstance(item, RelationshipObject) or isinstance(self.prev, RelationshipObject):
+                        if isinstance(self.prev, RectObject) and isinstance(item, RelationshipObject):
+                            tmp = item
+                            item = self.prev
+                            self.prev = tmp
+                        item.addRelLine(connecting_line, self.prev)
+                        self.scene.addItem(connecting_line)
+                    self.prev = None
+                    self.flag = False
+            elif item:
+                self.prev = item
+        else:
+            super().mousePressEvent(event)
+
+
+    def add_entity(self):
+        entity_object = RectObject(5, 5, "")
+        self.scene.addItem(entity_object)
+
+    def add_connect(self):
+        self.flag = True
+
+
+class MainWin(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setGeometry(100, 100, 500, 500)
+        self.setWindowTitle("Data model generator")
+
+        self.exit_action, self.entity_action, self.connect_line = self.toolbar_actions()
+
+        self.toolbar = self.create_toolbar()
+
+        self.view = GraphicView()
+        self.setCentralWidget(self.view)
+
+    def trigger_entity(self):
+        self.view.add_entity()
+
+    def trigger_connect(self):
+        self.view.add_connect()
+
+    def toolbar_actions(self):
+        exit_action = QAction('Exit', self)
+        exit_action.triggered.connect(qApp.quit)
+
+        entity_action = QAction('Entity', self)
+        entity_action.triggered.connect(self.trigger_entity)
+
+        connect_line = QAction('Connect', self)
+        connect_line.triggered.connect(self.trigger_connect)
+
+        return exit_action, entity_action, connect_line
+
+    def create_toolbar(self):
+        toolbar = self.addToolBar('TB')
+        toolbar.setMovable(False)
+        toolbar.addAction(self.exit_action)
+        toolbar.addAction(self.entity_action)
+        toolbar.addAction(self.connect_line)
+        return toolbar
+
 
 app = QApplication(sys.argv)
-win = QMainWindow()
+win = MainWin()
 
-view = GraphicView()
-
-view.show()
+win.show()
 sys.exit(app.exec_())
+
+
+
+#view = GraphicView()
+
+#view.show()
+#sys.exit(app.exec_())
