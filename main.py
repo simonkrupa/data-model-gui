@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
     QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
-    QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit
+    QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit, QTextEdit
 from PyQt5.QtCore import Qt, QPointF, QLineF
 
 
@@ -68,11 +68,18 @@ class RectObject(QGraphicsRectItem):
         self.y1 = self.y + self.h
         self.setAcceptHoverEvents(True)
 
-        self.pLineEdit = QLineEdit(text)
-        self.pLineEdit.setFrame(False)
-        self.pLineEdit.setGeometry(1, 35, 149, 35)
+        self.name1 = QLabel(text)
+        self.name1.setGeometry(1, 1, 149, 99)
+
+        self.name1.setAlignment(Qt.AlignCenter)
+        self.name1.setFrameStyle(0)
+
+        #self.pLineEdit = QLineEdit(text)
+        #self.pLineEdit.setFrame(False)
+        #self.pLineEdit.setGeometry(1, 35, 149, 35)
         self.pMyItem = QGraphicsProxyWidget(self)
-        self.pMyItem.setWidget(self.pLineEdit)
+        self.pMyItem.setWidget(self.name1)
+        #self.pMyItem.setWidget(self.pLineEdit)
         self.lines = []
         self.relLines = []
         #self.line = None
@@ -370,6 +377,8 @@ class GraphicView(QGraphicsView):
     def delete(self):
         self.delete_flag = True
 
+    def rename(self):
+        print("ide")
 
 class MainWin(QMainWindow):
     def __init__(self):
@@ -380,9 +389,17 @@ class MainWin(QMainWindow):
         self.setFixedSize(1280, 1000)
 
         self.view = GraphicView(self)
-        self.view.setGeometry(0, 25, 1280, 700)
+        self.view.setGeometry(0, 25, 1280, 650)
 
-        self.exit_action, self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action = self.toolbar_actions()
+        self.mode_info = QLabel("Základný mód", self)
+        self.mode_info.setGeometry(0, 675, 1280, 50)
+        self.mode_info.setAlignment(Qt.AlignCenter)
+        font = QFont()
+        font.setPointSize(15)
+        self.mode_info.setFont(font)
+        #self.mode_info.setStyleSheet("QLabel { background-color : red; }")
+
+        self.exit_action, self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, self.rename_action, self.basic_action = self.toolbar_actions()
         self.toolbar = self.create_toolbar()
 
         self.start_button = QPushButton("Start", self)
@@ -410,50 +427,73 @@ class MainWin(QMainWindow):
         self.text_area.clear()
 
     def trigger_delete(self):
+        self.mode_info.setText("Mód mazania")
         self.view.delete()
 
     def trigger_entity(self):
+        self.mode_info.setText("Mód tvorby entít")
         self.view.add_entity()
 
     def trigger_connect(self):
+        self.mode_info.setText("Mód spájania prvkov")
         self.view.add_connect()
 
     def trigger_attribute(self):
+        self.mode_info.setText("Mód tvorby atribútov")
         self.view.add_attribute()
 
     def trigger_relationship(self):
+        self.mode_info.setText("Mód tvorby vzťahov")
         self.view.add_relationship()
+
+    def trigger_rename(self):
+        self.mode_info.setText("Mód premenovania prvkov")
+        self.view.rename()
+
+    def trigger_basic(self):
+        self.mode_info.setText("Základný mód")
+
+
 
     def toolbar_actions(self):
         exit_action = QAction('Exit', self)
         exit_action.triggered.connect(qApp.quit)
 
-        entity_action = QAction('Entity', self)
+        entity_action = QAction('Entita', self)
         entity_action.triggered.connect(self.trigger_entity)
 
-        attribute_action = QAction('Attribute', self)
+        attribute_action = QAction('Atribút', self)
         attribute_action.triggered.connect(self.trigger_attribute)
 
-        relationship_action = QAction('Relationship', self)
+        relationship_action = QAction('Vzťah', self)
         relationship_action.triggered.connect(self.trigger_relationship)
 
-        connect_line = QAction('Connect', self)
+        connect_line = QAction('Pripojiť', self)
         connect_line.triggered.connect(self.trigger_connect)
 
-        delete_action = QAction('Delete', self)
+        delete_action = QAction('Vymazať', self)
         delete_action.triggered.connect(self.trigger_delete)
 
-        return exit_action, entity_action, attribute_action, relationship_action, connect_line, delete_action
+        rename_action = QAction('Premenovať', self)
+        rename_action.triggered.connect(self.trigger_rename)
+
+        basic_action = QAction('Pozorovať', self)
+        basic_action.setShortcut(Qt.Key_Escape)
+        basic_action.triggered.connect(self.trigger_basic)
+
+        return exit_action, entity_action, attribute_action, relationship_action, connect_line, delete_action, rename_action, basic_action
 
     def create_toolbar(self):
         toolbar = self.addToolBar('TB')
         toolbar.setMovable(False)
+        toolbar.addAction(self.basic_action)
         toolbar.addAction(self.exit_action)
         toolbar.addAction(self.entity_action)
         toolbar.addAction(self.attribute_action)
         toolbar.addAction(self.relationship_action)
         toolbar.addAction(self.connect_line)
         toolbar.addAction(self.delete_action)
+        toolbar.addAction(self.rename_action)
         print(toolbar.height())
         return toolbar
 
