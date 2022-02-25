@@ -1,10 +1,11 @@
 import sys
 
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtGui import QIcon, QFont, QColor, QPen
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
     QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
-    QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit, QTextEdit
-from PyQt5.QtCore import Qt, QPointF, QLineF
+    QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit, QTextEdit, QMessageBox, \
+    QDialog, QWidget
+from PyQt5.QtCore import Qt, QPointF, QLineF, QPoint
 
 
 class RelationshipObject(QGraphicsRectItem):
@@ -18,11 +19,25 @@ class RelationshipObject(QGraphicsRectItem):
         self.x = x
         self.y = y
 
-        self.pLineEdit = QLineEdit(text)
-        self.pLineEdit.setFrame(False)
-        self.pLineEdit.setGeometry(0, 75, 105, 35)
+        self.name1 = QLabel(text)
+        self.name1.setGeometry(0, 75, 105, 35)
+
+        self.setBrush(QColor("white"))
+        self.name1.setStyleSheet("QLabel { background-color : white; }")
+        self.name1.setAlignment(Qt.AlignCenter)
+        self.name1.setFrameStyle(0)
+
+        # self.pLineEdit = QLineEdit(text)
+        # self.pLineEdit.setFrame(False)
+        # self.pLineEdit.setGeometry(1, 35, 149, 35)
         self.pMyItem = QGraphicsProxyWidget(self)
-        self.pMyItem.setWidget(self.pLineEdit)
+        self.pMyItem.setWidget(self.name1)
+
+        #self.pLineEdit = QLineEdit(text)
+        #self.pLineEdit.setFrame(False)
+        #self.pLineEdit.setGeometry(0, 75, 105, 35)
+        #self.pMyItem = QGraphicsProxyWidget(self)
+        #self.pMyItem.setWidget(self.pLineEdit)
         self.pMyItem.setRotation(-45)
 
         self.entity = None
@@ -70,7 +85,7 @@ class RectObject(QGraphicsRectItem):
 
         self.name1 = QLabel(text)
         self.name1.setGeometry(1, 1, 149, 99)
-
+        self.name1.setStyleSheet("QLabel { background-color : white; }")
         self.name1.setAlignment(Qt.AlignCenter)
         self.name1.setFrameStyle(0)
 
@@ -159,11 +174,25 @@ class EllipseObject(QGraphicsEllipseItem):
 
         self.text = text
 
-        self.pLineEdit = QLineEdit(text)
-        self.pLineEdit.setFrame(False)
-        self.pLineEdit.setGeometry(10, 35, 120, 35)
+        self.name1 = QLabel(text)
+        self.name1.setGeometry(20, 20, 109, 59)
+
+        self.setBrush(QColor("white"))
+        self.name1.setStyleSheet("QLabel { background-color : white; }")
+        self.name1.setAlignment(Qt.AlignCenter)
+        self.name1.setFrameStyle(0)
+
+        # self.pLineEdit = QLineEdit(text)
+        # self.pLineEdit.setFrame(False)
+        # self.pLineEdit.setGeometry(1, 35, 149, 35)
         self.pMyItem = QGraphicsProxyWidget(self)
-        self.pMyItem.setWidget(self.pLineEdit)
+        self.pMyItem.setWidget(self.name1)
+
+        #self.pLineEdit = QLineEdit(text)
+        #self.pLineEdit.setFrame(False)
+        #self.pLineEdit.setGeometry(10, 35, 120, 35)
+        #self.pMyItem = QGraphicsProxyWidget(self)
+        #self.pMyItem.setWidget(self.pLineEdit)
 
     def mousePressEvent(self, event):
         print(self.text)
@@ -199,6 +228,9 @@ class ConnectingLine(QGraphicsLineItem):
         self.att = None
         self.entity = None
         self.rel = None
+        self.pen = QPen()
+        self.pen.setWidth(1)
+        self.setPen(self.pen)
 
     def changePos(self, x, y):
         if self.att:
@@ -270,9 +302,10 @@ class ConnectingLine(QGraphicsLineItem):
 class GraphicView(QGraphicsView):
     def __init__(self, x):
         super().__init__(x)
-        self.flag = False
+
+        self.xt = None
+        self.mode = 0
         self.prev = None
-        self.delete_flag = False
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
         #self.setSceneRect(0, 0, 500, 500)
@@ -307,8 +340,7 @@ class GraphicView(QGraphicsView):
         #self.scene.addItem(self.line)
 
     def mousePressEvent(self, event):
-        if self.flag:
-            self.delete_flag = False
+        if self.mode == 4:
             item = self.items(event.pos())
             if item:
                 if isinstance(item[0], QGraphicsProxyWidget):
@@ -339,46 +371,109 @@ class GraphicView(QGraphicsView):
                                 item.addRelLine(connecting_line, self.prev)
                                 self.scene.addItem(connecting_line)
                         self.prev = None
-                        self.flag = False
                     else:
                         self.prev = None
-                        self.flag = False
                 elif item:
                     self.prev = item
-        elif self.delete_flag:
-            self.flag = False
+        elif self.mode == 5:
             item = self.items(event.pos())
             if item:
                 if isinstance(item[0], QGraphicsProxyWidget):
                     item = item[1]
+                elif isinstance(item[0], ConnectingLine):
+                    item = item[0]
                 else:
                     item = item[0]
+                    #item = item.name1 #ziskat label
                 #if isinstance(item, (EllipseObject, ConnectingLine, RectObject, RelationshipObject)):
+                print(item)
                 self.scene.removeItem(item)
-                self.delete_flag = False
+        elif self.mode == 1:
+            print(event.pos())
+            entity_object = RectObject(event.pos().x(), event.pos().y(), "")
+            print(entity_object.x)
+            print(entity_object.y)
+            self.scene.addItem(entity_object)
+        elif self.mode == 2:
+            att_object = EllipseObject(event.pos().x(), event.pos().y(), "")
+            self.scene.addItem(att_object)
+        elif self.mode == 3:
+            rel_object = RelationshipObject(event.pos().x(), event.pos().y(), "")
+            self.scene.addItem(rel_object)
+        elif self.mode == 6:
+            item = self.items(event.pos())
+            if item:
+                print(item)
+                if isinstance(item[0], ConnectingLine):
+                    return
+                if isinstance(item[0], QGraphicsProxyWidget):
+                    item = item[0]
+                else:
+                    if len(item)<2:
+                        item = item[0]
+                    else:
+                        item = item[1]
+                self.xt = PopUp()
+                while self.xt.input_text is None:
+                    continue
+                if isinstance(item, QGraphicsProxyWidget):
+                    item.widget().setText(self.xt.input_text)
+                else:
+                    item.pMyItem.widget().setText(self.xt.input_text)
+
+
+        elif self.mode == 0:
+            print(event.pos())
+            super().mousePressEvent(event)
         else:
             super().mousePressEvent(event)
 
     def add_entity(self):
-        entity_object = RectObject(5, 5, "")
-        self.scene.addItem(entity_object)
+        self.mode = 1
 
     def add_connect(self):
-        self.flag = True
+        self.mode = 4
 
     def add_attribute(self):
-        att_object = EllipseObject(50, 50, "")
-        self.scene.addItem(att_object)
+        self.mode = 2
 
     def add_relationship(self):
-        rel_object = RelationshipObject(100, 100, "")
-        self.scene.addItem(rel_object)
+        self.mode = 3
 
     def delete(self):
-        self.delete_flag = True
+        self.mode = 5
 
     def rename(self):
-        print("ide")
+        self.mode = 6
+
+    def basic(self):
+        self.mode = 0
+
+
+class PopUp(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Zvoľte názov")
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        self.setFixedSize(300, 100)
+
+        self.input = QLineEdit()
+        self.button = QPushButton("Zvoľ")
+        self.button.clicked.connect(self.execute)
+        self.input_text = None
+
+        layout.addWidget(self.input)
+        layout.addWidget(self.button)
+
+        self.exec_()
+
+    def execute(self):
+        self.input_text = self.input.text()
+        self.close()
+
 
 class MainWin(QMainWindow):
     def __init__(self):
@@ -420,6 +515,7 @@ class MainWin(QMainWindow):
         self.text_area.setPlaceholderText("Zadajte text.")
         self.text_area.setGeometry(125, 725, 1155, 275)
 
+
     def clear_view(self):
         self.view.scene.clear()
 
@@ -452,8 +548,7 @@ class MainWin(QMainWindow):
 
     def trigger_basic(self):
         self.mode_info.setText("Základný mód")
-
-
+        self.view.basic()
 
     def toolbar_actions(self):
         exit_action = QAction('Exit', self)
@@ -500,7 +595,6 @@ class MainWin(QMainWindow):
 
 app = QApplication(sys.argv)
 win = MainWin()
-
 win.show()
 sys.exit(app.exec_())
 
