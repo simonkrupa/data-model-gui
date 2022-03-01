@@ -153,6 +153,8 @@ class RectObject(QGraphicsRectItem):
         updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
         updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
         self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+        self.x = updated_cursor_x
+        self.y = updated_cursor_y
         self.x1 = updated_cursor_x + self.r
         self.y1 = updated_cursor_y + self.h
         self.drawLine()
@@ -162,7 +164,6 @@ class RectObject(QGraphicsRectItem):
 
     def getPos(self):
         return self.x1, self.y1-50
-
 
 
 class EllipseObject(QGraphicsEllipseItem):
@@ -320,11 +321,11 @@ class GraphicView(QGraphicsView):
         #self.setSceneRect(0, 0, 500, 500)
 
         self.moveObject = RectObject(0, 0, "Zviera")
-        self.entity2 = RectObject(700, 400, "Clovek")
-        self.moveObject2 = EllipseObject(300, 100, "telefonne cislo")
-        self.att2 = EllipseObject(600, 100, "pohlavie")
-        self.att3 = EllipseObject(100, 100, "vek")
-        self.relationship = RelationshipObject(500, 500, "pracuje")
+        self.entity2 = RectObject(0, 0, "Clovek")
+        self.moveObject2 = EllipseObject(0, 0, "telefonne cislo")
+        self.att2 = EllipseObject(0, 0, "pohlavie")
+        self.att3 = EllipseObject(0, 0, "vek")
+        self.relationship = RelationshipObject(0, 0, "pracuje")
 
         self.line1 = ConnectingLine(300, 300, 300, -20)
         self.line2 = ConnectingLine(300, 300, 300, -20)
@@ -355,10 +356,13 @@ class GraphicView(QGraphicsView):
     def mouseMoveEvent(self, event):
         if self.move_flag:
             if self.line_mouse_move is None:
-                self.line_mouse_move = QGraphicsLineItem(self.start_point.x, self.start_point.y, event.pos().x(), event.pos().y())
+                point = self.mapToScene(int(self.start_point.x), int(self.start_point.y))
+                end_point = self.mapToScene(event.pos())
+                self.line_mouse_move = QGraphicsLineItem(int(point.x()), int(point.y()), int(end_point.x()), int(end_point.y()))
                 self.scene.addItem(self.line_mouse_move)
             else:
-                self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, event.pos().x(), event.pos().y())
+                end_point = self.mapToScene(event.pos())
+                self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, end_point.x(), end_point.y())
         elif self.mode == 0:
             #if self.start_point is not None:
              #   print(self.items())
@@ -378,14 +382,19 @@ class GraphicView(QGraphicsView):
     def mousePressEvent(self, event):
         if self.mode == 4:
             item = self.items(event.pos())
-            print(event.pos())
-            print(event.screenPos())
+            print(item)
             if item:
                 self.move_flag = True
                 if isinstance(item[0], QGraphicsProxyWidget):
                     item = item[1]
+                elif isinstance(item[0], QGraphicsLineItem):
+                    if len(item) > 2:
+                        item = item[2]
+                    else:
+                        item = item[1]
                 else:
                     item = item[0]
+                print(item)
                 self.start_point = item
                 if item and self.prev:
                     self.move_flag = False
@@ -414,6 +423,8 @@ class GraphicView(QGraphicsView):
                             elif isinstance(item, RectObject) and isinstance(self.prev, RelationshipObject):
                                 item.addRelLine(connecting_line, self.prev)
                                 self.scene.addItem(connecting_line)
+                        print(self.prev)
+                        print(item)
                         self.prev = None
                     else:
                         self.prev = None
