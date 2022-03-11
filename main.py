@@ -4,7 +4,7 @@ from PyQt5.QtGui import QIcon, QFont, QColor, QPen
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
     QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
     QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit, QTextEdit, QMessageBox, \
-    QDialog, QWidget
+    QDialog, QWidget, QHBoxLayout
 from PyQt5.QtCore import Qt, QPointF, QLineF, QPoint, QSize
 
 
@@ -70,6 +70,10 @@ class RelationshipObject(QGraphicsRectItem):
     def getPos(self):
         return self.x, self.y + int((self.h/2))
 
+    def setMyPosition(self, x, y):
+        self.x = x
+        self.y = y
+
 
 class RectObject(QGraphicsRectItem):
     def __init__(self, x, y, text):
@@ -98,6 +102,12 @@ class RectObject(QGraphicsRectItem):
         self.lines = []
         self.relLines = []
         #self.line = None
+
+    def setMyPosition(self, x, y):
+        self.x = x
+        self.y = y
+        self.x1 = self.x + self.r
+        self.y1 = self.y + self.h
 
     def addRelLine(self, line, rel):
         #self.relLines = line
@@ -227,6 +237,10 @@ class EllipseObject(QGraphicsEllipseItem):
     def setLine(self, line):
         self.line = line
 
+    def setMyPosition(self, x, y):
+        self.x = x
+        self.y = y
+
 
 class ConnectingLine(QGraphicsLineItem):
     def __init__(self, x, y, r, h):
@@ -318,7 +332,7 @@ class GraphicView(QGraphicsView):
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
         self.maximumViewportSize()
-        self.setSceneRect(0, 0, 500, 500)
+        #self.setSceneRect(0, 0, 500, 500)
 
         self.moveObject = RectObject(0, 0, "Zviera")
         self.entity2 = RectObject(0, 0, "Clovek")
@@ -348,6 +362,8 @@ class GraphicView(QGraphicsView):
         self.scene.addItem(self.moveObject)
         self.scene.addItem(self.moveObject2)
         #self.scene.addItem(self.line)
+
+
 
     def mouseReleaseEvent(self, event):
         if self.mode == 0:
@@ -423,8 +439,6 @@ class GraphicView(QGraphicsView):
                             elif isinstance(item, RectObject) and isinstance(self.prev, RelationshipObject):
                                 item.addRelLine(connecting_line, self.prev)
                                 self.scene.addItem(connecting_line)
-                        print(self.prev)
-                        print(item)
                         self.prev = None
                     else:
                         self.prev = None
@@ -446,20 +460,22 @@ class GraphicView(QGraphicsView):
         elif self.mode == 1:
             entity_object = RectObject(0, 0, "")
             point = self.mapToScene(event.pos())
+            entity_object.setPos(point.x(), point.y())
             self.scene.addItem(entity_object)
-            entity_object.setPos(point)
-            entity_object.x = point.x()
-            entity_object.y = point.y()
+            entity_object.setMyPosition(point.x(), point.y())
+
         elif self.mode == 2:
             att_object = EllipseObject(0, 0, "")
             point = self.mapToScene(event.pos())
             self.scene.addItem(att_object)
             att_object.setPos(point)
+            att_object.setMyPosition(point.x(), point.y())
         elif self.mode == 3:
             rel_object = RelationshipObject(0, 0, "")
             point = self.mapToScene(event.pos())
             self.scene.addItem(rel_object)
             rel_object.setPos(point)
+            rel_object.setMyPosition(point.x(), point.y())
         elif self.mode == 6:
             item = self.items(event.pos())
             if item:
@@ -483,13 +499,6 @@ class GraphicView(QGraphicsView):
 
         elif self.mode == 0:
             super().mousePressEvent(event)
-            print(event.pos())
-            print(event.screenPos())
-            print(event.globalPos())
-            print(event.localPos())
-            print(event.windowPos())
-            print(event.x())
-            print(event.y())
             self.start_point = self.items(event.pos())
 
         else:
@@ -546,6 +555,23 @@ class PopUp(QDialog):
         self.close()
 
 
+class ButtonPanel(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.hlayout = QHBoxLayout()
+        self.hlayout.setSpacing(0)
+        self.hlayout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.hlayout)
+
+        self.button_widget = QWidget()
+        self.button_layout = QVBoxLayout()
+        self.button_layout.setSpacing(0)
+        self.button_layout.setContentsMargins(0, 0, 0, 0)
+        self.button_widget.setLayout(self.button_layout)
+
+        self.hlayout.addWidget(self.button_widget)
+
+
 class MainWin(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -554,37 +580,58 @@ class MainWin(QMainWindow):
         self.setGeometry(0, 0, 1280, 800)
         #self.setFixedSize(1280, 1000)
 
-        self.view = GraphicView(self)
-        self.view.setGeometry(0, 25, 1280, 650)
+        self.mlayout = QVBoxLayout()
+        self.mlayout.setSpacing(10)
+        self.mlayout.setContentsMargins(0,5,0,0)
+        self.widget = QWidget()
+        self.widget.setLayout(self.mlayout)
+        self.setCentralWidget(self.widget)
 
-        self.mode_info = QLabel("Základný mód", self)
-        self.mode_info.setGeometry(0, 675, 1280, 50)
+        self.view = GraphicView(self)
+        self.mlayout.addWidget(self.view, 2)
+        #self.view.setGeometry(0, 25, 1280, 650)
+
+        self.mode_info = QLabel("Základný mód")
+        #self.mode_info.setGeometry(0, 675, 1280, 50)
         self.mode_info.setAlignment(Qt.AlignCenter)
         font = QFont()
         font.setPointSize(15)
         self.mode_info.setFont(font)
+        self.mlayout.addWidget(self.mode_info)
         #self.mode_info.setStyleSheet("QLabel { background-color : red; }")
 
         self.exit_action, self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, self.rename_action, self.basic_action = self.toolbar_actions()
         self.toolbar = self.create_toolbar()
 
-        self.start_button = QPushButton("Start", self)
-        self.start_button.setGeometry(0, 725, 125, 90)
-
-        self.delete_button = QPushButton("Delete", self)
-        self.delete_button.setGeometry(0, 815, 125, 90)
+        self.start_button = QPushButton("Start")
+        #self.start_button.setGeometry(0, 725, 125, 90)
+        self.start_button.setMinimumSize(100, 70)
+        self.mlayout.addWidget(self.start_button)
+        self.delete_button = QPushButton("Delete")
+        self.delete_button.setMinimumSize(100, 70)
+        #self.delete_button.setGeometry(0, 815, 125, 90)
         self.delete_button.clicked.connect(self.delete_text)
+        self.mlayout.addWidget(self.delete_button)
 
-        self.clear_button = QPushButton("Clear", self)
-        self.clear_button.setGeometry(0, 905, 125, 95)
+        self.clear_button = QPushButton("Clear")
+        self.clear_button.setMinimumSize(100, 70)
+        #self.clear_button.setGeometry(0, 905, 125, 95)
         self.clear_button.clicked.connect(self.clear_view)
+        self.mlayout.addWidget(self.clear_button)
+
+        self.button_panel = ButtonPanel()
+        self.button_panel.button_layout.addWidget(self.start_button)
+        self.button_panel.button_layout.addWidget(self.delete_button)
+        self.button_panel.button_layout.addWidget(self.clear_button)
+        self.mlayout.addWidget(self.button_panel)
 
         self.text_area = QPlainTextEdit(self)
         font = QFont()
         font.setPointSize(12)
         self.text_area.setFont(font)
         self.text_area.setPlaceholderText("Zadajte text.")
-        self.text_area.setGeometry(125, 725, 1155, 275)
+        self.button_panel.hlayout.addWidget(self.text_area)
+        #self.text_area.setGeometry(125, 725, 1155, 275)
 
 
     def clear_view(self):
@@ -660,7 +707,6 @@ class MainWin(QMainWindow):
         toolbar.addAction(self.connect_line)
         toolbar.addAction(self.delete_action)
         toolbar.addAction(self.rename_action)
-        print(toolbar.height())
         return toolbar
 
 
