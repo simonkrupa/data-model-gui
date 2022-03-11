@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphi
     QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
     QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit, QTextEdit, QMessageBox, \
     QDialog, QWidget
-from PyQt5.QtCore import Qt, QPointF, QLineF, QPoint
+from PyQt5.QtCore import Qt, QPointF, QLineF, QPoint, QSize
 
 
 class RelationshipObject(QGraphicsRectItem):
@@ -318,7 +318,7 @@ class GraphicView(QGraphicsView):
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
         self.maximumViewportSize()
-        #self.setSceneRect(0, 0, 500, 500)
+        self.setSceneRect(0, 0, 500, 500)
 
         self.moveObject = RectObject(0, 0, "Zviera")
         self.entity2 = RectObject(0, 0, "Clovek")
@@ -448,6 +448,8 @@ class GraphicView(QGraphicsView):
             point = self.mapToScene(event.pos())
             self.scene.addItem(entity_object)
             entity_object.setPos(point)
+            entity_object.x = point.x()
+            entity_object.y = point.y()
         elif self.mode == 2:
             att_object = EllipseObject(0, 0, "")
             point = self.mapToScene(event.pos())
@@ -515,6 +517,10 @@ class GraphicView(QGraphicsView):
         self.mode = 0
 
 
+class QTextBox(object):
+    pass
+
+
 class PopUp(QDialog):
     def __init__(self):
         super().__init__()
@@ -524,7 +530,7 @@ class PopUp(QDialog):
         self.setLayout(layout)
 
         self.setFixedSize(300, 100)
-
+        self.input = QPlainTextEdit("ads\r\nwd\neew\n")
         self.input = QLineEdit()
         self.button = QPushButton("Zvoľ")
         self.button.clicked.connect(self.execute)
@@ -545,8 +551,8 @@ class MainWin(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Data model generator")
-        #self.setGeometry(0, 0, 1280, 800)
-        self.setFixedSize(1280, 1000)
+        self.setGeometry(0, 0, 1280, 800)
+        #self.setFixedSize(1280, 1000)
 
         self.view = GraphicView(self)
         self.view.setGeometry(0, 25, 1280, 650)
