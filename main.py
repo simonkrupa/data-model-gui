@@ -373,9 +373,13 @@ class GraphicView(QGraphicsView):
         if self.move_flag:
             if self.line_mouse_move is None:
                 point = self.mapToScene(int(self.start_point.x), int(self.start_point.y))
-                end_point = self.mapToScene(event.pos())
+                #end_point = self.mapToScene(event.pos())
+                end_point = (event.pos())
+                print(int(point.x()), int(point.y()), int(end_point.x()), int(end_point.y()))
                 self.line_mouse_move = QGraphicsLineItem(int(point.x()), int(point.y()), int(end_point.x()), int(end_point.y()))
+                print(type(end_point))
                 self.scene.addItem(self.line_mouse_move)
+                print("sm")
             else:
                 end_point = self.mapToScene(event.pos())
                 self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, end_point.x(), end_point.y())
@@ -401,11 +405,14 @@ class GraphicView(QGraphicsView):
             print(item)
             if item:
                 self.move_flag = True
+                print(type(item))
                 if isinstance(item[0], QGraphicsProxyWidget):
                     item = item[1]
                 elif isinstance(item[0], QGraphicsLineItem):
                     if len(item) > 2:
                         item = item[2]
+                    elif len(item) == 1:
+                        item = item[0]
                     else:
                         item = item[1]
                 else:
@@ -418,17 +425,19 @@ class GraphicView(QGraphicsView):
                     self.line_mouse_move = None
                     self.start_point = None
                     if type(self.prev) != type(item):
-                        connecting_line = ConnectingLine(300, 300, 300, -20)
+                        connecting_line = ConnectingLine(self.prev.x, self.prev.y, 1, 1)
                         if isinstance(item, EllipseObject) or isinstance(self.prev, EllipseObject):
                             if isinstance(self.prev, RectObject) and isinstance(item, EllipseObject):
-                                tmp = item
-                                item = self.prev
-                                self.prev = tmp
-                                item.addLine(connecting_line, self.prev)
-                                self.scene.addItem(connecting_line)
+                                if not item.line:
+                                    tmp = item
+                                    item = self.prev
+                                    self.prev = tmp
+                                    item.addLine(connecting_line, self.prev)
+                                    self.scene.addItem(connecting_line)
                             elif isinstance(item, RectObject) and isinstance(self.prev, EllipseObject):
-                                item.addLine(connecting_line, self.prev)
-                                self.scene.addItem(connecting_line)
+                                if not self.prev.line:
+                                    item.addLine(connecting_line, self.prev)
+                                    self.scene.addItem(connecting_line)
                         elif isinstance(item, RelationshipObject) or isinstance(self.prev, RelationshipObject):
                             if isinstance(self.prev, RectObject) and isinstance(item, RelationshipObject):
                                 tmp = item
@@ -456,6 +465,9 @@ class GraphicView(QGraphicsView):
                     #item = item.name1 #ziskat label
                 #if isinstance(item, (EllipseObject, ConnectingLine, RectObject, RelationshipObject)):
                 print(item)
+                if isinstance(item, ConnectingLine):
+                    if item.att:
+                        item.att.line = None
                 self.scene.removeItem(item)
         elif self.mode == 1:
             entity_object = RectObject(0, 0, "")
@@ -490,8 +502,7 @@ class GraphicView(QGraphicsView):
                     else:
                         item = item[1]
                 self.xt = PopUp()
-                while self.xt.input_text is None:
-                    continue
+
                 if isinstance(item, QGraphicsProxyWidget):
                     item.widget().setText(self.xt.input_text)
                 else:
