@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5.QtGui import QIcon, QFont, QColor, QPen
+from PyQt5.QtGui import QIcon, QFont, QColor, QPen, QPainter
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
     QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
     QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit, QTextEdit, QMessageBox, \
@@ -323,6 +323,11 @@ class ConnectingLine(QGraphicsLineItem):
 class GraphicView(QGraphicsView):
     def __init__(self, x):
         super().__init__(x)
+
+        self.grid_group = None
+        self.grid_flag = True
+        self.align = False
+
         self.move_flag = False
         self.start_point = None
         self.line_mouse_move = None
@@ -364,37 +369,147 @@ class GraphicView(QGraphicsView):
         #self.scene.addItem(self.line)
 
 
-
     def mouseReleaseEvent(self, event):
         if self.mode == 0:
+            self.align = False
             self.start_point = None
 
     def mouseMoveEvent(self, event):
         if self.move_flag:
             if self.line_mouse_move is None:
-                point = self.mapToScene(int(self.start_point.x), int(self.start_point.y))
-                #end_point = self.mapToScene(event.pos())
-                end_point = (event.pos())
-                print(int(point.x()), int(point.y()), int(end_point.x()), int(end_point.y()))
-                self.line_mouse_move = QGraphicsLineItem(int(point.x()), int(point.y()), int(end_point.x()), int(end_point.y()))
-                print(type(end_point))
+                #point = self.mapToScene(int(self.start_point.x), int(self.start_point.y))
+                point = QPoint(int(self.start_point.x), int(self.start_point.y))
+                end_point = self.mapToScene(event.pos())
+                #end_point = (event.pos())
+                print(type(self.start_point))
+                if isinstance(self.start_point, RelationshipObject):
+                    if self.start_point.y >= int(end_point.y()):
+                        self.line_mouse_move = QGraphicsLineItem(self.start_point.x, self.start_point.y,
+                                                     int(end_point.x()),
+                                                     int(end_point.y()))
+                    elif self.start_point.y + 100 <= int(end_point.y()):
+                        self.line_mouse_move = QGraphicsLineItem(self.start_point.x, self.start_point.y + 140,
+                                                     int(end_point.x()),
+                                                     int(end_point.y()))
+                    elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
+                            end_point.y()) and self.start_point.x < int(end_point.x()):
+                        self.line_mouse_move = QGraphicsLineItem(self.start_point.x + 70, self.start_point.y + 70,
+                                                     int(end_point.x()),
+                                                     int(end_point.y()))
+                    elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
+                            end_point.y()) and self.start_point.x >= int(end_point.x()):
+                        self.line_mouse_move = QGraphicsLineItem(self.start_point.x - 70, self.start_point.y + 70,
+                                                     int(end_point.x()),
+                                                     int(end_point.y()))
+                    else:
+
+                        self.line_mouse_move = QGraphicsLineItem(self.start_point.x, self.start_point.y, int(end_point.x()),
+                                                     int(end_point.y()))
+                else:
+                    if self.start_point.y >= int(end_point.y()):
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x)+75, int(self.start_point.y), int(end_point.x()), int(end_point.y()))
+                    elif self.start_point.y + 100 <= int(end_point.y()):
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x)+75, int(self.start_point.y)+100, int(end_point.x()),
+                                                                 int(end_point.y()))
+                    elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(end_point.y()) and self.start_point.x < int(end_point.x()):
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x)+150, int(self.start_point.y)+50, int(end_point.x()),
+                                                                 int(end_point.y()))
+                    elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(end_point.y()) and self.start_point.x >= int(end_point.x()):
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x), int(self.start_point.y)+50, int(end_point.x()),
+                                                                 int(end_point.y()))
+                    else:
+                        print("smf")
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x()), int(self.start_point.y()), int(end_point.x()), int(end_point.y()))
+                    print("xaxa")
+                    print(end_point.x(), end_point.y())
                 self.scene.addItem(self.line_mouse_move)
-                print("sm")
             else:
                 end_point = self.mapToScene(event.pos())
-                self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, end_point.x(), end_point.y())
+
+                if self.prev:
+                    if isinstance(self.start_point, RelationshipObject):
+                        if self.start_point.y >= int(end_point.y()):
+                            self.line_mouse_move.setLine(self.start_point.x , self.start_point.y,
+                                                         int(end_point.x()),
+                                                         int(end_point.y()))
+                        elif self.start_point.y + 100 <= int(end_point.y()):
+                            self.line_mouse_move.setLine(self.start_point.x, self.start_point.y + 140,
+                                                         int(end_point.x()),
+                                                         int(end_point.y()))
+                        elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
+                                end_point.y()) and self.start_point.x < int(end_point.x()):
+                            self.line_mouse_move.setLine(self.start_point.x + 70, self.start_point.y + 70,
+                                                         int(end_point.x()),
+                                                         int(end_point.y()))
+                        elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
+                                end_point.y()) and self.start_point.x >= int(end_point.x()):
+                            self.line_mouse_move.setLine(self.start_point.x -70, self.start_point.y + 70,
+                                                         int(end_point.x()),
+                                                         int(end_point.y()))
+                        else:
+                            self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, int(end_point.x()),
+                                                         int(end_point.y()))
+                    else:
+                        if self.start_point.y >= int(end_point.y()):
+                            self.line_mouse_move.setLine(self.start_point.x+75, self.start_point.y, int(end_point.x()),
+                                                                     int(end_point.y()))
+                        elif self.start_point.y + 100 <= int(end_point.y()):
+                            self.line_mouse_move.setLine(self.start_point.x+75, self.start_point.y + 100,
+                                                                     int(end_point.x()),
+                                                                     int(end_point.y()))
+                        elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
+                                end_point.y()) and self.start_point.x < int(end_point.x()):
+                            self.line_mouse_move.setLine(self.start_point.x + 150, self.start_point.y + 50,
+                                                                     int(end_point.x()),
+                                                                     int(end_point.y()))
+                        elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
+                                end_point.y()) and self.start_point.x >= int(end_point.x()):
+                            self.line_mouse_move.setLine(self.start_point.x, self.start_point.y + 50,
+                                                                     int(end_point.x()),
+                                                                     int(end_point.y()))
+                        else:
+                            print("ccc")
+                            self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, int(end_point.x()),
+                                                                     int(end_point.y()))
+                        print("meemem")
+                        print(end_point.x(), end_point.y())
+                    #self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, end_point.x(), end_point.y())
+                else:
+                    self.scene.removeItem(self.line_mouse_move)
+                    self.line_mouse_move = None
+                    self.move_flag = False
+                    return
         elif self.mode == 0:
-            #if self.start_point is not None:
-             #   print(self.items())
-              #  for i in self.items():
-               #     print(type(i.x())) ###mam ine typy QtPoint a float riesit
-                #    print(type(self.start_point.x()))
-                 #   if i.x() == self.start_point.x():
-                  #      print("aahah")
-            #print("pos")
-            #print(event.screenPos())
-            #item = self.items(event.pos())
-            #print(item)
+            """if self.align:
+                print(self.items(event.pos()))
+                if self.items(event.pos()):
+                    align_item = self.items(event.pos())
+                    if isinstance(align_item[0], QGraphicsProxyWidget):
+                        align_item = align_item[1]
+                    elif isinstance(align_item[0], QGraphicsLineItem):
+                        if len(align_item) > 2:
+                            align_item = align_item[2]
+                        elif len(align_item) == 1:
+                            align_item = align_item[0]
+                        else:
+                            align_item = align_item[1]
+                    line = None
+                    line2 = None
+
+                    print(align_item)
+                    for item in self.items():
+                        if line:
+                            self.scene.removeItem(line)
+                        if line2:
+                            self.scene.removeItem(line2)
+                        if item.x == align_item.x and item != align_item:
+                            line = QGraphicsLineItem(item.x, item.y, align_item.x, align_item.y)
+                            self.scene.addItem(line)
+                        elif item.y == align_item.y and item != align_item:
+                            line2 = QGraphicsLineItem(item.x, item.y, align_item.x, align_item.y)
+                            self.scene.addItem(line2)
+                    #self.scene.removeItem(line)
+"""
             super().mouseMoveEvent(event)
         else:
             super().mouseMoveEvent(event)
@@ -419,6 +534,7 @@ class GraphicView(QGraphicsView):
                     item = item[0]
                 print(item)
                 self.start_point = item
+                print(self.start_point)
                 if item and self.prev:
                     self.move_flag = False
                     self.scene.removeItem(self.line_mouse_move)
@@ -509,6 +625,13 @@ class GraphicView(QGraphicsView):
                     item.pMyItem.widget().setText(self.xt.input_text)
 
         elif self.mode == 0:
+            if self.prev:
+                self.prev = None
+            if self.items(event.pos()):
+                self.align = True
+
+            print(event.pos())
+            print(self.mapToScene(event.pos()))
             super().mousePressEvent(event)
             self.start_point = self.items(event.pos())
 
@@ -535,6 +658,29 @@ class GraphicView(QGraphicsView):
 
     def basic(self):
         self.mode = 0
+
+    def grid(self):
+        if self.grid_flag:
+            ix = 0
+            iy = 0
+            pen = QPen(Qt.gray)
+            self.grid_group = QGraphicsItemGroup()
+            while iy < self.height():
+                ly = QGraphicsLineItem(0, iy, self.width(), iy)
+                ly.setPen(pen)
+                self.grid_group.addToGroup(ly)
+                iy = iy + 50
+            while ix < self.width():
+                lx = QGraphicsLineItem(ix, 0, ix, self.height())
+                lx.setPen(pen)
+                self.grid_group.addToGroup(lx)
+                ix = ix + 50
+            self.grid_group.setZValue(-1)
+            self.scene.addItem(self.grid_group)
+            self.grid_flag = False
+        else:
+            self.scene.removeItem(self.grid_group)
+            self.grid_flag = True
 
 
 class QTextBox(object):
@@ -611,7 +757,7 @@ class MainWin(QMainWindow):
         self.mlayout.addWidget(self.mode_info)
         #self.mode_info.setStyleSheet("QLabel { background-color : red; }")
 
-        self.exit_action, self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, self.rename_action, self.basic_action = self.toolbar_actions()
+        self.exit_action, self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, self.rename_action, self.basic_action, self.custom_action = self.toolbar_actions()
         self.toolbar = self.create_toolbar()
 
         self.start_button = QPushButton("Start")
@@ -679,6 +825,10 @@ class MainWin(QMainWindow):
         self.mode_info.setText("Základný mód")
         self.view.basic()
 
+    def trigger_custom(self):
+        self.mode_info.setText("Mód zarovnania")
+        self.view.grid()
+
     def toolbar_actions(self):
         exit_action = QAction('Exit', self)
         exit_action.triggered.connect(qApp.quit)
@@ -705,7 +855,10 @@ class MainWin(QMainWindow):
         basic_action.setShortcut(Qt.Key_Escape)
         basic_action.triggered.connect(self.trigger_basic)
 
-        return exit_action, entity_action, attribute_action, relationship_action, connect_line, delete_action, rename_action, basic_action
+        custom_action = QAction('Custom', self)
+        custom_action.triggered.connect(self.trigger_custom)
+
+        return exit_action, entity_action, attribute_action, relationship_action, connect_line, delete_action, rename_action, basic_action, custom_action
 
     def create_toolbar(self):
         toolbar = self.addToolBar('TB')
@@ -718,6 +871,7 @@ class MainWin(QMainWindow):
         toolbar.addAction(self.connect_line)
         toolbar.addAction(self.delete_action)
         toolbar.addAction(self.rename_action)
+        toolbar.addAction(self.custom_action)
         return toolbar
 
 
