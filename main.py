@@ -510,6 +510,19 @@ class GraphicView(QGraphicsView):
                             self.scene.addItem(line2)
                     #self.scene.removeItem(line)
 """
+            """items = self.scene.items()
+            my_items = []
+            for item in items:
+                if isinstance(item, (EllipseObject, RectObject, RelationshipObject)):
+                    my_items.append(item)
+            for item in my_items:
+                print("------------------------")
+                print(item)
+                col_items = item.collidingItems()
+
+                for col_item in col_items:
+                    if isinstance(col_item, QGraphicsLineItem):
+                        col_item.setPen(Qt.yellow)"""
             super().mouseMoveEvent(event)
         else:
             super().mouseMoveEvent(event)
@@ -634,7 +647,8 @@ class GraphicView(QGraphicsView):
             print(self.mapToScene(event.pos()))
             super().mousePressEvent(event)
             self.start_point = self.items(event.pos())
-
+        elif self.mode == 7:
+            super().mousePressEvent(event)
         else:
             super().mousePressEvent(event)
 
@@ -658,20 +672,31 @@ class GraphicView(QGraphicsView):
 
     def basic(self):
         self.mode = 0
+        if not self.grid_flag:
+            self.grid()
 
     def grid(self):
+        self.mode = 7
         if self.grid_flag:
             ix = 0
             iy = 0
             pen = QPen(Qt.gray)
             self.grid_group = QGraphicsItemGroup()
             while iy < self.height():
-                ly = QGraphicsLineItem(0, iy, self.width(), iy)
+                point = QPoint(0, iy)
+                point = self.mapToScene(point)
+                e_point = QPoint(self.width(), iy)
+                e_point = self.mapToScene(e_point)
+                ly = QGraphicsLineItem(point.x(), point.y(), e_point.x(), e_point.y())
                 ly.setPen(pen)
                 self.grid_group.addToGroup(ly)
                 iy = iy + 50
             while ix < self.width():
-                lx = QGraphicsLineItem(ix, 0, ix, self.height())
+                point = QPoint(ix, 0)
+                point = self.mapToScene(point)
+                e_point = QPoint(ix, self.height())
+                e_point = self.mapToScene(e_point)
+                lx = QGraphicsLineItem(point.x(), point.y(),e_point.x(), e_point.y())
                 lx.setPen(pen)
                 self.grid_group.addToGroup(lx)
                 ix = ix + 50
@@ -680,7 +705,10 @@ class GraphicView(QGraphicsView):
             self.grid_flag = False
         else:
             self.scene.removeItem(self.grid_group)
+            self.mode = 0
             self.grid_flag = True
+
+
 
 
 class QTextBox(object):
@@ -827,7 +855,12 @@ class MainWin(QMainWindow):
 
     def trigger_custom(self):
         self.mode_info.setText("Mód zarovnania")
-        self.view.grid()
+        if self.view.grid_flag:
+            self.view.grid()
+        else:
+            self.view.grid()
+            self.mode_info.setText("Základný mód")
+            print(self.view.mode)
 
     def toolbar_actions(self):
         exit_action = QAction('Exit', self)
