@@ -4,7 +4,7 @@ from PyQt5.QtGui import QIcon, QFont, QColor, QPen, QPainter
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
     QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
     QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit, QTextEdit, QMessageBox, \
-    QDialog, QWidget, QHBoxLayout
+    QDialog, QWidget, QHBoxLayout, QActionGroup
 from PyQt5.QtCore import Qt, QPointF, QLineF, QPoint, QSize
 
 
@@ -18,6 +18,10 @@ class RelationshipObject(QGraphicsRectItem):
         self.setAcceptHoverEvents(True)
         self.x = x
         self.y = y
+
+        self.grid = False
+        self.grid_x = None
+        self.grid_y = None
 
         self.name1 = QLabel(text)
         self.name1.setGeometry(0, 75, 105, 35)
@@ -52,17 +56,41 @@ class RelationshipObject(QGraphicsRectItem):
 
         orig_position = self.scenePos()
 
-        updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
-        updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
-        self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
-        self.x = updated_cursor_x
-        self.y = updated_cursor_y
+        # updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
+        # updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
+        updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + self.x
+        updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + self.y
+
+        if self.grid:
+            g_x = self.grid_x.x()%25
+            act_x = updated_cursor_x%25
+            g_y = self.grid_y.y() % 25 +5
+            act_y = updated_cursor_y % 25
+            if 5 >= act_x - g_x >= -5 and 5 >= act_y - g_y >= -5:
+                self.setPos(QPointF(updated_cursor_x-(act_x-g_x), updated_cursor_y-(act_y-g_y)))
+                # self.x = updated_cursor_x+(act_x-g_x)
+                # self.y = updated_cursor_y+(act_y-g_y)
+                self.x = updated_cursor_x
+                self.y = updated_cursor_y
+            else:
+                self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+                self.x = updated_cursor_x
+                self.y = updated_cursor_y
+        else:
+            self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+            self.x = updated_cursor_x
+            self.y = updated_cursor_y
+        for line in self.lines:
+            line.changeRelPos(self.x, self.y)
+
+    def adjust_lines(self):
         for line in self.lines:
             line.changeRelPos(self.x, self.y)
 
 
     def mouseReleaseEvent(self, event):
-        print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
+        #print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
+        pass
 
     def setLine(self, line):
         self.lines.append(line)
@@ -86,6 +114,10 @@ class RectObject(QGraphicsRectItem):
         self.x1 = self.x + self.r
         self.y1 = self.y + self.h
         self.setAcceptHoverEvents(True)
+
+        self.grid = False
+        self.grid_x = None
+        self.grid_y = None
 
         self.name1 = QLabel(text)
         self.name1.setGeometry(1, 1, 149, 99)
@@ -160,17 +192,46 @@ class RectObject(QGraphicsRectItem):
         orig_position = self.scenePos()
         #orig_position = self.pos()
 
-        updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
-        updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
-        self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
-        self.x = updated_cursor_x
-        self.y = updated_cursor_y
-        self.x1 = updated_cursor_x + self.r
-        self.y1 = updated_cursor_y + self.h
+        # updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
+        # updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
+        updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + self.x
+        updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + self.y
+
+
+        if self.grid:
+            g_x = self.grid_x.x()%50
+            act_x = updated_cursor_x%50
+            g_y = self.grid_y.y() % 50
+            act_y = updated_cursor_y % 50
+            if 10 >= act_x - g_x >= -10 and 10 >= act_y - g_y >= -10:
+                print("aaaa")
+                self.setPos(QPointF(updated_cursor_x-(act_x-g_x), updated_cursor_y-(act_y-g_y)))
+                # self.x = updated_cursor_x+(act_x-g_x)
+                # self.y = updated_cursor_y+(act_y-g_y)
+                # self.x1 = updated_cursor_x+(act_x-g_x) + self.r
+                # self.y1 = updated_cursor_y+(act_y-g_y) + self.h
+                self.x = updated_cursor_x
+                self.y = updated_cursor_y
+                self.x1 = updated_cursor_x + self.r
+                self.y1 = updated_cursor_y + self.h
+            else:
+                self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+                self.x = updated_cursor_x
+                self.y = updated_cursor_y
+                self.x1 = updated_cursor_x + self.r
+                self.y1 = updated_cursor_y + self.h
+
+        else:
+            self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+            self.x = updated_cursor_x
+            self.y = updated_cursor_y
+            self.x1 = updated_cursor_x + self.r
+            self.y1 = updated_cursor_y + self.h
         self.drawLine()
 
     def mouseReleaseEvent(self, event):
-        print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
+        #print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
+        pass
 
     def getPos(self):
         return self.x1, self.y1-50
@@ -186,6 +247,10 @@ class EllipseObject(QGraphicsEllipseItem):
         self.x = x
         self.y = y
         self.line = None
+
+        self.grid = False
+        self.grid_x = None
+        self.grid_y = None
 
         self.text = text
 
@@ -210,26 +275,51 @@ class EllipseObject(QGraphicsEllipseItem):
         #self.pMyItem.setWidget(self.pLineEdit)
 
     def mousePressEvent(self, event):
-        print(self.text)
+        """print(self.text)
         print(self.x)
-        print(self.y)
+        print(self.y)"""
+        pass
 
     def mouseMoveEvent(self, event):
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
 
+
         orig_position = self.scenePos()
 
-        updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
-        updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
-        self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
-        self.x = updated_cursor_x
-        self.y = updated_cursor_y
+        # updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
+        # updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
+
+        updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + self.x
+        updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + self.y
+
+        act_x = updated_cursor_x % 50
+
+        act_y = updated_cursor_y % 50
+        if self.grid:
+            g_x = self.grid_x.x() % 50
+            g_y = self.grid_y.y() % 50
+            if 10 >= act_x - g_x >= -10 and 10 >= act_y - g_y >= -10:
+                print("aaaa")
+                self.setPos(QPointF(updated_cursor_x-(act_x-g_x), updated_cursor_y-(act_y-g_y)))
+                # self.x = updated_cursor_x+(act_x-g_x)
+                # self.y = updated_cursor_y+(act_y-g_y)
+                self.x = updated_cursor_x
+                self.y = updated_cursor_y
+            else:
+                self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+                self.x = updated_cursor_x
+                self.y = updated_cursor_y
+        else:
+            self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+            self.x = updated_cursor_x
+            self.y = updated_cursor_y
         if self.line:
             self.line.changeAttPos(self.x, self.y)
 
     def mouseReleaseEvent(self, event):
-        print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
+        #print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
+        pass
 
     def getPos(self):
         return self.x, self.y + int((self.h/2))
@@ -265,7 +355,6 @@ class ConnectingLine(QGraphicsLineItem):
             elif y < uni_y - 50:
                 self.setLine(x - 75, y + 50, uni_x + 75, uni_y - 50)
             else:
-                print(x, y, uni_x, uni_y)
                 self.setLine(x, y, uni_x, uni_y)
         elif self.rel:
             uni_x, uni_y = self.rel.getPos()
@@ -278,7 +367,6 @@ class ConnectingLine(QGraphicsLineItem):
             elif y < uni_y - 50:
                 self.setLine(x - 75, y + 50, uni_x, uni_y - 50)
             else:
-                print(x, y, uni_x, uni_y)
                 self.setLine(x, y, uni_x, uni_y)
 
         #self.setLine(x, y, uni_x, uni_y)
@@ -327,6 +415,9 @@ class GraphicView(QGraphicsView):
         self.grid_group = None
         self.grid_flag = True
         self.align = False
+
+        self.grid_point_x = None
+        self.grid_point_y = None
 
         self.move_flag = False
         self.start_point = None
@@ -381,7 +472,6 @@ class GraphicView(QGraphicsView):
                 point = QPoint(int(self.start_point.x), int(self.start_point.y))
                 end_point = self.mapToScene(event.pos())
                 #end_point = (event.pos())
-                print(type(self.start_point))
                 if isinstance(self.start_point, RelationshipObject):
                     if self.start_point.y >= int(end_point.y()):
                         self.line_mouse_move = QGraphicsLineItem(self.start_point.x, self.start_point.y,
@@ -418,10 +508,7 @@ class GraphicView(QGraphicsView):
                         self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x), int(self.start_point.y)+50, int(end_point.x()),
                                                                  int(end_point.y()))
                     else:
-                        print("smf")
                         self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x()), int(self.start_point.y()), int(end_point.x()), int(end_point.y()))
-                    print("xaxa")
-                    print(end_point.x(), end_point.y())
                 self.scene.addItem(self.line_mouse_move)
             else:
                 end_point = self.mapToScene(event.pos())
@@ -468,11 +555,8 @@ class GraphicView(QGraphicsView):
                                                                      int(end_point.x()),
                                                                      int(end_point.y()))
                         else:
-                            print("ccc")
                             self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, int(end_point.x()),
                                                                      int(end_point.y()))
-                        print("meemem")
-                        print(end_point.x(), end_point.y())
                     #self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, end_point.x(), end_point.y())
                 else:
                     self.scene.removeItem(self.line_mouse_move)
@@ -530,10 +614,8 @@ class GraphicView(QGraphicsView):
     def mousePressEvent(self, event):
         if self.mode == 4:
             item = self.items(event.pos())
-            print(item)
             if item:
                 self.move_flag = True
-                print(type(item))
                 if isinstance(item[0], QGraphicsProxyWidget):
                     item = item[1]
                 elif isinstance(item[0], QGraphicsLineItem):
@@ -545,9 +627,7 @@ class GraphicView(QGraphicsView):
                         item = item[1]
                 else:
                     item = item[0]
-                print(item)
                 self.start_point = item
-                print(self.start_point)
                 if item and self.prev:
                     self.move_flag = False
                     self.scene.removeItem(self.line_mouse_move)
@@ -593,7 +673,6 @@ class GraphicView(QGraphicsView):
                     item = item[0]
                     #item = item.name1 #ziskat label
                 #if isinstance(item, (EllipseObject, ConnectingLine, RectObject, RelationshipObject)):
-                print(item)
                 if isinstance(item, ConnectingLine):
                     if item.att:
                         item.att.line = None
@@ -620,7 +699,6 @@ class GraphicView(QGraphicsView):
         elif self.mode == 6:
             item = self.items(event.pos())
             if item:
-                print(item)
                 if isinstance(item[0], ConnectingLine):
                     return
                 if isinstance(item[0], QGraphicsProxyWidget):
@@ -643,8 +721,6 @@ class GraphicView(QGraphicsView):
             if self.items(event.pos()):
                 self.align = True
 
-            print(event.pos())
-            print(self.mapToScene(event.pos()))
             super().mousePressEvent(event)
             self.start_point = self.items(event.pos())
         elif self.mode == 7:
@@ -677,37 +753,102 @@ class GraphicView(QGraphicsView):
 
     def grid(self):
         self.mode = 7
+
         if self.grid_flag:
             ix = 0
             iy = 0
             pen = QPen(Qt.gray)
+            pen.setBrush(QColor(211, 211, 211))
             self.grid_group = QGraphicsItemGroup()
             while iy < self.height():
-                point = QPoint(0, iy)
-                point = self.mapToScene(point)
+                self.grid_point_y = QPoint(0, iy)
+                self.grid_point_y = self.mapToScene(self.grid_point_y)
                 e_point = QPoint(self.width(), iy)
                 e_point = self.mapToScene(e_point)
-                ly = QGraphicsLineItem(point.x(), point.y(), e_point.x(), e_point.y())
+                ly = QGraphicsLineItem(self.grid_point_y.x(), self.grid_point_y.y(), e_point.x(), e_point.y())
                 ly.setPen(pen)
                 self.grid_group.addToGroup(ly)
                 iy = iy + 50
             while ix < self.width():
-                point = QPoint(ix, 0)
-                point = self.mapToScene(point)
+                self.grid_point_x = QPoint(ix, 0)
+                self.grid_point_x = self.mapToScene(self.grid_point_x)
                 e_point = QPoint(ix, self.height())
                 e_point = self.mapToScene(e_point)
-                lx = QGraphicsLineItem(point.x(), point.y(),e_point.x(), e_point.y())
+                lx = QGraphicsLineItem(self.grid_point_x.x(), self.grid_point_x.y(),e_point.x(), e_point.y())
                 lx.setPen(pen)
                 self.grid_group.addToGroup(lx)
                 ix = ix + 50
             self.grid_group.setZValue(-1)
+            """items = self.scene.items()
+            for item in items:
+                if isinstance(item, (EllipseObject, RectObject)):
+                    #print(point.x()%50)
+                    #print(item.pos().x()%50)
+                    #print(item.pos())
+                    #print(item.pos().x()+(point.x()%50-item.pos().x()%50))
+                    new_x = item.pos().x()+(point.x()%50-item.pos().x()%50)
+                    new_y = item.pos().y()+(point_y.y()%50-item.pos().y()%50)
+                    item.setPos(new_x, new_y)
+                    item.setMyPosition(new_x, new_y)
+                    if isinstance(item, EllipseObject):
+                        if item.line:
+                            item.line.changeAttPos(new_x, new_y)
+                    if isinstance(item, RectObject):
+                        if item.lines:
+                            item.drawLine()
+                if isinstance(item, RelationshipObject):
+                    new_x = item.pos().x() + (point.x() % 25 - item.pos().x() % 25)
+                    new_y = item.pos().y() + (point_y.y() % 50 - item.pos().y() % 50) -20
+                    item.setPos(new_x, new_y)
+                    item.setMyPosition(new_x, new_y)
+                    item.adjust_lines()"""
+
             self.scene.addItem(self.grid_group)
             self.grid_flag = False
+            r = self.scene.items()
+            for item in r:
+                if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
+                    item.grid = True
+                    item.grid_x = self.grid_point_x
+                    item.grid_y = self.grid_point_y
         else:
             self.scene.removeItem(self.grid_group)
+            r = self.scene.items()
+            for item in r:
+                if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
+                    item.grid = False
             self.mode = 0
             self.grid_flag = True
 
+    def t_align(self):
+        if self.grid_flag:
+            print("aaa")
+        else:
+            items = self.scene.items()
+            for item in items:
+                if isinstance(item, RelationshipObject):
+                    print(item.pos().x())
+                    print(item.pos().y())
+                    self.grid_point_y.y()
+                    new_x = item.pos().x() + (self.grid_point_x.x() % 25 - item.pos().x() % 25)
+                    new_y = item.pos().y() + (self.grid_point_y.y() % 25 - item.pos().y() % 25)+5
+                    item.setPos(new_x, new_y)
+                    item.setMyPosition(new_x, new_y)
+                    item.adjust_lines()
+                if isinstance(item, (EllipseObject, RectObject)):
+                    new_x = item.pos().x() + (self.grid_point_x.x() % 50 - item.pos().x() % 50)
+                    new_y = item.pos().y() + (self.grid_point_y.y() % 50 - item.pos().y() % 50)
+                    item.setPos(new_x, new_y)
+                    item.setMyPosition(new_x, new_y)
+                    if isinstance(item, EllipseObject):
+                        if item.line:
+                            item.line.changeAttPos(new_x, new_y)
+                    if isinstance(item, RectObject):
+                        if item.lines:
+                            item.drawLine()
+                        if item.relLines:
+                            for l in item.relLines:
+                                l.rel.adjust_lines()
 
 
 
@@ -776,6 +917,9 @@ class MainWin(QMainWindow):
         self.mlayout.addWidget(self.view, 2)
         #self.view.setGeometry(0, 25, 1280, 650)
 
+        self.action_group = None
+        self.last_checked = None
+
         self.mode_info = QLabel("Základný mód")
         #self.mode_info.setGeometry(0, 675, 1280, 50)
         self.mode_info.setAlignment(Qt.AlignCenter)
@@ -785,7 +929,7 @@ class MainWin(QMainWindow):
         self.mlayout.addWidget(self.mode_info)
         #self.mode_info.setStyleSheet("QLabel { background-color : red; }")
 
-        self.exit_action, self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, self.rename_action, self.basic_action, self.custom_action = self.toolbar_actions()
+        self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, self.rename_action, self.basic_action, self.custom_action, self.align_action = self.toolbar_actions()
         self.toolbar = self.create_toolbar()
 
         self.start_button = QPushButton("Start")
@@ -818,7 +962,6 @@ class MainWin(QMainWindow):
         self.button_panel.hlayout.addWidget(self.text_area)
         #self.text_area.setGeometry(125, 725, 1155, 275)
 
-
     def clear_view(self):
         self.view.scene.clear()
 
@@ -827,77 +970,137 @@ class MainWin(QMainWindow):
 
     def trigger_delete(self):
         self.mode_info.setText("Mód mazania")
-        self.view.delete()
+        if self.action_group.checkedAction() == self.delete_action:
+            if self.last_checked == self.delete_action:
+                self.basic_action.setChecked(True)
+                self.trigger_basic()
+            else:
+                self.last_checked = self.delete_action
+                self.view.delete()
 
     def trigger_entity(self):
         self.mode_info.setText("Mód tvorby entít")
-        self.view.add_entity()
+        if self.action_group.checkedAction() == self.entity_action:
+            if self.last_checked == self.entity_action:
+                self.basic_action.setChecked(True)
+                self.trigger_basic()
+            else:
+                self.last_checked = self.entity_action
+                self.view.add_entity()
 
     def trigger_connect(self):
         self.mode_info.setText("Mód spájania prvkov")
-        self.view.add_connect()
+        if self.action_group.checkedAction() == self.connect_line:
+            if self.last_checked == self.connect_line:
+                self.basic_action.setChecked(True)
+                self.trigger_basic()
+            else:
+                self.last_checked = self.connect_line
+                self.view.add_connect()
 
     def trigger_attribute(self):
         self.mode_info.setText("Mód tvorby atribútov")
-        self.view.add_attribute()
+        if self.action_group.checkedAction() == self.attribute_action:
+            if self.last_checked == self.attribute_action:
+                self.basic_action.setChecked(True)
+                self.trigger_basic()
+            else:
+                self.last_checked = self.attribute_action
+                self.view.add_attribute()
 
     def trigger_relationship(self):
         self.mode_info.setText("Mód tvorby vzťahov")
-        self.view.add_relationship()
+        if self.action_group.checkedAction() == self.relationship_action:
+            if self.last_checked == self.relationship_action:
+                self.basic_action.setChecked(True)
+                self.trigger_basic()
+            else:
+                self.last_checked = self.relationship_action
+                self.view.add_relationship()
 
     def trigger_rename(self):
         self.mode_info.setText("Mód premenovania prvkov")
-        self.view.rename()
+        if self.action_group.checkedAction() == self.rename_action:
+            if self.last_checked == self.rename_action:
+                self.basic_action.setChecked(True)
+                self.trigger_basic()
+            else:
+                self.last_checked = self.rename_action
+                self.view.rename()
 
     def trigger_basic(self):
         self.mode_info.setText("Základný mód")
+        self.last_checked = self.basic_action
         self.view.basic()
 
     def trigger_custom(self):
         self.mode_info.setText("Mód zarovnania")
-        if self.view.grid_flag:
-            self.view.grid()
-        else:
-            self.view.grid()
-            self.mode_info.setText("Základný mód")
-            print(self.view.mode)
+        if self.action_group.checkedAction() == self.custom_action:
+            if self.last_checked == self.custom_action:
+                self.basic_action.setChecked(True)
+                #self.trigger_basic()
+                self.mode_info.setText("Základný mód")
+                self.view.grid()
+            else:
+                self.last_checked = self.custom_action
+                self.view.grid()
+        # if self.view.grid_flag:
+        #     self.view.grid()
+        # else:
+        #     self.view.grid()
+        #     self.mode_info.setText("Základný mód")
+
+    def trigger_align(self):
+        self.view.t_align()
 
     def toolbar_actions(self):
-        exit_action = QAction('Exit', self)
-        exit_action.triggered.connect(qApp.quit)
+        # exit_action = QAction('Exit', self)
+        # exit_action.triggered.connect(qApp.quit)
 
         entity_action = QAction('Entita', self)
         entity_action.triggered.connect(self.trigger_entity)
+        entity_action.setCheckable(True)
 
         attribute_action = QAction('Atribút', self)
         attribute_action.triggered.connect(self.trigger_attribute)
+        attribute_action.setCheckable(True)
 
         relationship_action = QAction('Vzťah', self)
         relationship_action.triggered.connect(self.trigger_relationship)
+        relationship_action.setCheckable(True)
 
         connect_line = QAction('Pripojiť', self)
         connect_line.triggered.connect(self.trigger_connect)
+        connect_line.setCheckable(True)
+
 
         delete_action = QAction('Vymazať', self)
         delete_action.triggered.connect(self.trigger_delete)
+        delete_action.setCheckable(True)
 
         rename_action = QAction('Premenovať', self)
         rename_action.triggered.connect(self.trigger_rename)
+        rename_action.setCheckable(True)
 
         basic_action = QAction('Pozorovať', self)
         basic_action.setShortcut(Qt.Key_Escape)
         basic_action.triggered.connect(self.trigger_basic)
+        basic_action.setCheckable(True)
 
-        custom_action = QAction('Custom', self)
+        custom_action = QAction('Mriežka', self)
         custom_action.triggered.connect(self.trigger_custom)
+        custom_action.setCheckable(True)
 
-        return exit_action, entity_action, attribute_action, relationship_action, connect_line, delete_action, rename_action, basic_action, custom_action
+        align_action = QAction('Zarovnaj', self)
+        align_action.triggered.connect(self.trigger_align)
+
+        return entity_action, attribute_action, relationship_action, connect_line, delete_action, rename_action, basic_action, custom_action, align_action
 
     def create_toolbar(self):
         toolbar = self.addToolBar('TB')
         toolbar.setMovable(False)
         toolbar.addAction(self.basic_action)
-        toolbar.addAction(self.exit_action)
+        # toolbar.addAction(self.exit_action)
         toolbar.addAction(self.entity_action)
         toolbar.addAction(self.attribute_action)
         toolbar.addAction(self.relationship_action)
@@ -905,6 +1108,19 @@ class MainWin(QMainWindow):
         toolbar.addAction(self.delete_action)
         toolbar.addAction(self.rename_action)
         toolbar.addAction(self.custom_action)
+        toolbar.addAction(self.align_action)
+
+        self.action_group = QActionGroup(toolbar)
+        self.action_group.setExclusive(True)
+        self.action_group.addAction(self.entity_action)
+        self.action_group.addAction(self.attribute_action)
+        self.action_group.addAction(self.relationship_action)
+        self.action_group.addAction(self.connect_line)
+        self.action_group.addAction(self.delete_action)
+        self.action_group.addAction(self.rename_action)
+        self.action_group.addAction(self.custom_action)
+        self.action_group.addAction(self.basic_action)
+
         return toolbar
 
 
