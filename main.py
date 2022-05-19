@@ -22,9 +22,12 @@ class RelationshipObject(QGraphicsRectItem):
         self.grid_x = None
         self.grid_y = None
 
+        self.align_pen = QPen()
+        self.align_pen.setWidth(3)
+        self.align_pen.setColor(Qt.blue)
 
         self.name1 = QLabel(text)
-        self.name1.setGeometry(0, 75, 105, 35)
+        self.name1.setGeometry(3, 75, 105, 35)
 
         self.setBrush(QColor("white"))
         self.name1.setStyleSheet("QLabel { background-color : white; }")
@@ -72,15 +75,17 @@ class RelationshipObject(QGraphicsRectItem):
                 # self.y = updated_cursor_y+(act_y-g_y)
                 self.x = updated_cursor_x
                 self.y = updated_cursor_y
+                self.setPen(self.align_pen)
             else:
                 self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
                 self.x = updated_cursor_x
                 self.y = updated_cursor_y
-
+                self.setPen(Qt.black)
         else:
             self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
             self.x = updated_cursor_x
             self.y = updated_cursor_y
+            self.setPen(Qt.black)
         for line in self.lines:
             line.changeRelPos(self.x, self.y)
 
@@ -115,7 +120,13 @@ class RectObject(QGraphicsRectItem):
         self.y = y
         self.x1 = self.x + self.r
         self.y1 = self.y + self.h
+
+
         self.setAcceptHoverEvents(True)
+
+        self.align_pen = QPen()
+        self.align_pen.setWidth(5)
+        self.align_pen.setColor(Qt.blue)
 
         self.grid = False
         self.grid_x = None
@@ -206,22 +217,21 @@ class RectObject(QGraphicsRectItem):
             g_y = self.grid_y.y() % 25
             act_y = updated_cursor_y % 25#zmena
             if 10 >= act_x - g_x >= -10 and 10 >= act_y - g_y >= -10:
-                print("aaaa")
                 self.setPos(QPointF(updated_cursor_x-(act_x-g_x), updated_cursor_y-(act_y-g_y)))
                 # self.x = updated_cursor_x+(act_x-g_x)
                 # self.y = updated_cursor_y+(act_y-g_y)
-                # self.x1 = updated_cursor_x+(act_x-g_x) + self.r
-                # self.y1 = updated_cursor_y+(act_y-g_y) + self.h
                 self.x = updated_cursor_x
                 self.y = updated_cursor_y
                 self.x1 = updated_cursor_x + self.r
                 self.y1 = updated_cursor_y + self.h
+                self.setPen(self.align_pen)
             else:
                 self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
                 self.x = updated_cursor_x
                 self.y = updated_cursor_y
                 self.x1 = updated_cursor_x + self.r
                 self.y1 = updated_cursor_y + self.h
+                self.setPen(Qt.black)
 
         else:
             self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
@@ -229,6 +239,7 @@ class RectObject(QGraphicsRectItem):
             self.y = updated_cursor_y
             self.x1 = updated_cursor_x + self.r
             self.y1 = updated_cursor_y + self.h
+            self.setPen(Qt.black)
         self.drawLine()
 
     def mouseReleaseEvent(self, event):
@@ -253,6 +264,10 @@ class EllipseObject(QGraphicsEllipseItem):
         self.grid = False
         self.grid_x = None
         self.grid_y = None
+
+        self.align_pen = QPen()
+        self.align_pen.setWidth(5)
+        self.align_pen.setColor(Qt.blue)
 
         self.text = text
 
@@ -302,20 +317,22 @@ class EllipseObject(QGraphicsEllipseItem):
             g_x = self.grid_x.x() % 25
             g_y = self.grid_y.y() % 25
             if 10 >= act_x - g_x >= -10 and 10 >= act_y - g_y >= -10:
-                print("aaaa")
                 self.setPos(QPointF(updated_cursor_x-(act_x-g_x), updated_cursor_y-(act_y-g_y)))
                 # self.x = updated_cursor_x+(act_x-g_x)
                 # self.y = updated_cursor_y+(act_y-g_y)
                 self.x = updated_cursor_x
                 self.y = updated_cursor_y
+                self.setPen(self.align_pen)
             else:
                 self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
                 self.x = updated_cursor_x
                 self.y = updated_cursor_y
+                self.setPen(Qt.black)
         else:
             self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
             self.x = updated_cursor_x
             self.y = updated_cursor_y
+            self.setPen(Qt.black)
         if self.line:
             self.line.changeAttPos(self.x, self.y)
 
@@ -488,6 +505,25 @@ class GraphicView(QGraphicsView):
 
 
     def mouseReleaseEvent(self, event):
+        # for item in self.items():
+        #     if isinstance(item, (RelationshipObject, RectObject, EllipseObject)):
+        #         item.setPen(Qt.black)
+
+        for item in self.items(event.pos()):
+            if isinstance(item, RelationshipObject):
+                item.setPen(Qt.black)
+                for line in item.lines:
+                    line.changeRelPos(item.pos().x(), item.pos().y())
+            elif isinstance(item, EllipseObject):
+                item.setPen(Qt.black)
+                if item.line:
+                    item.line.changeAttPos(item.pos().x(), item.pos().y())
+            elif isinstance(item, RectObject):
+                item.setPen(Qt.black)
+                #TODO zarovnanie entity
+
+
+
         if self.mode == 0:
             self.align = False
             self.start_point = None
