@@ -841,8 +841,8 @@ class GraphicView(QGraphicsView):
         self.mode = 7
 
         if self.grid_flag:
-            ix = 0#-500
-            iy = 0#-500
+            ix = 0
+            iy = 0
             pen = QPen(Qt.gray)
             pen.setBrush(QColor(211, 211, 211))
             self.grid_group = QGraphicsItemGroup()
@@ -869,30 +869,6 @@ class GraphicView(QGraphicsView):
                 self.grid_group.addToGroup(lx)
                 ix = ix + 25            #zmena
             self.grid_group.setZValue(-1)
-            """items = self.scene.items()
-            for item in items:
-                if isinstance(item, (EllipseObject, RectObject)):
-                    #print(point.x()%50)
-                    #print(item.pos().x()%50)
-                    #print(item.pos())
-                    #print(item.pos().x()+(point.x()%50-item.pos().x()%50))
-                    new_x = item.pos().x()+(point.x()%50-item.pos().x()%50)
-                    new_y = item.pos().y()+(point_y.y()%50-item.pos().y()%50)
-                    item.setPos(new_x, new_y)
-                    item.setMyPosition(new_x, new_y)
-                    if isinstance(item, EllipseObject):
-                        if item.line:
-                            item.line.changeAttPos(new_x, new_y)
-                    if isinstance(item, RectObject):
-                        if item.lines:
-                            item.drawLine()
-                if isinstance(item, RelationshipObject):
-                    new_x = item.pos().x() + (point.x() % 25 - item.pos().x() % 25)
-                    new_y = item.pos().y() + (point_y.y() % 50 - item.pos().y() % 50) -20
-                    item.setPos(new_x, new_y)
-                    item.setMyPosition(new_x, new_y)
-                    item.adjust_lines()"""
-
             self.scene.addItem(self.grid_group)
             self.grid_flag = False
             r = self.scene.items()
@@ -902,7 +878,6 @@ class GraphicView(QGraphicsView):
                     item.grid_x = self.grid_point_x
                     item.grid_y = self.grid_point_y
         else:
-            # self.grid_group.setVisible(False)
             self.scene.removeItem(self.grid_group)
             r = self.scene.items()
             for item in r:
