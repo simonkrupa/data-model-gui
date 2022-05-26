@@ -1,5 +1,6 @@
 import sys
 
+from PyQt5 import QtGui
 from PyQt5.QtGui import QIcon, QFont, QColor, QPen, QPainter, QPolygonF
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
     QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
@@ -447,7 +448,6 @@ class ConnectingLine(QGraphicsLineItem):
     def setRel(self, rel):
         self.rel = rel
 
-
 class GraphicView(QGraphicsView):
     def __init__(self, x):
         super().__init__(x)
@@ -502,6 +502,14 @@ class GraphicView(QGraphicsView):
         self.scene.addItem(self.moveObject)
         self.scene.addItem(self.moveObject2)
         #self.scene.addItem(self.line)
+
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+        super().resizeEvent(event)
+        print("zmena")
+        if self.grid_group:
+            self.grid_flag = True
+            self.scene.removeItem(self.grid_group)
+            self.grid()
 
 
     def mouseReleaseEvent(self, event):
@@ -834,8 +842,27 @@ class GraphicView(QGraphicsView):
 
     def basic(self):
         self.mode = 0
+        r = self.scene.items()
+        for item in r:
+            if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
+                item.grid = False
         if not self.grid_flag:
             self.grid()
+
+    def call_aligning(self):
+        self.mode = 7
+        self.grid()
+        self.grid_group.setVisible(False)
+        r = self.scene.items()
+        for item in r:
+            if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
+                item.grid = True
+                item.grid_x = self.grid_point_x
+                item.grid_y = self.grid_point_y
+        # r = self.scene.items()
+        # for item in r:
+        #     if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
+        #         item.grid = False
 
     def grid(self):
         self.mode = 7
@@ -871,18 +898,18 @@ class GraphicView(QGraphicsView):
             self.grid_group.setZValue(-1)
             self.scene.addItem(self.grid_group)
             self.grid_flag = False
-            r = self.scene.items()
-            for item in r:
-                if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
-                    item.grid = True
-                    item.grid_x = self.grid_point_x
-                    item.grid_y = self.grid_point_y
+            # r = self.scene.items()
+            # for item in r:
+            #     if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
+            #         item.grid = True
+            #         item.grid_x = self.grid_point_x
+            #         item.grid_y = self.grid_point_y
         else:
             self.scene.removeItem(self.grid_group)
-            r = self.scene.items()
-            for item in r:
-                if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
-                    item.grid = False
+            # r = self.scene.items()
+            # for item in r:
+            #     if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
+            #         item.grid = False
             self.mode = 0
             self.grid_flag = True
 
@@ -998,7 +1025,7 @@ class MainWin(QMainWindow):
         self.mlayout.addWidget(self.mode_info)
         #self.mode_info.setStyleSheet("QLabel { background-color : red; }")
 
-        self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, self.rename_action, self.basic_action, self.custom_action, self.align_action = self.toolbar_actions()
+        self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, self.rename_action, self.basic_action, self.custom_action, self.align_action, self.aligning_action = self.toolbar_actions()
         self.toolbar = self.create_toolbar()
 
         self.start_button = QPushButton("Start")
@@ -1113,14 +1140,21 @@ class MainWin(QMainWindow):
             else:
                 self.last_checked = self.custom_action
                 self.view.grid()
-        # if self.view.grid_flag:
-        #     self.view.grid()
-        # else:
-        #     self.view.grid()
-        #     self.mode_info.setText("Základný mód")
+                # if(self.view.grid_group):
+                    # self.view.grid_group.setVisible(True)
+
 
     def trigger_align(self):
         self.view.t_align()
+
+    def trigger_aligning(self):
+        self.mode_info.setText(("Mód zarovnávania"))
+        # self.view.grid()
+        self.view.call_aligning()
+        if self.view.grid_group:
+            self.view.grid_group.setVisible(False)
+
+
 
     def toolbar_actions(self):
         # exit_action = QAction('Exit', self)
@@ -1142,7 +1176,6 @@ class MainWin(QMainWindow):
         connect_line.triggered.connect(self.trigger_connect)
         connect_line.setCheckable(True)
 
-
         delete_action = QAction('Vymazať', self)
         delete_action.triggered.connect(self.trigger_delete)
         delete_action.setCheckable(True)
@@ -1163,7 +1196,11 @@ class MainWin(QMainWindow):
         align_action = QAction('Zarovnaj', self)
         align_action.triggered.connect(self.trigger_align)
 
-        return entity_action, attribute_action, relationship_action, connect_line, delete_action, rename_action, basic_action, custom_action, align_action
+        aligning_action = QAction('Zarovnávanie', self)
+        aligning_action.setCheckable(True)
+        aligning_action.triggered.connect(self.trigger_aligning)
+
+        return entity_action, attribute_action, relationship_action, connect_line, delete_action, rename_action, basic_action, custom_action, align_action, aligning_action
 
     def create_toolbar(self):
         toolbar = self.addToolBar('TB')
@@ -1178,6 +1215,7 @@ class MainWin(QMainWindow):
         toolbar.addAction(self.rename_action)
         toolbar.addAction(self.custom_action)
         toolbar.addAction(self.align_action)
+        toolbar.addAction(self.aligning_action)
 
         self.action_group = QActionGroup(toolbar)
         self.action_group.setExclusive(True)
@@ -1189,6 +1227,7 @@ class MainWin(QMainWindow):
         self.action_group.addAction(self.rename_action)
         self.action_group.addAction(self.custom_action)
         self.action_group.addAction(self.basic_action)
+        self.action_group.addAction(self.aligning_action)
 
         return toolbar
 
