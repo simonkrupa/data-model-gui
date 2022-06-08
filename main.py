@@ -26,12 +26,13 @@ class RelationshipObject(QGraphicsRectItem):
         self.align_pen = QPen()
         self.align_pen.setWidth(3)
         self.align_pen.setColor(Qt.blue)
-
         self.name1 = QLabel(text)
-        self.name1.setGeometry(3, 75, 105, 35)
+        # self.name1.setGeometry(3, 75, 105, 35)
+        self.name1.setGeometry(-20, 60, 115, 80)
+        self.name1.setWordWrap(True)
 
-        # self.setBrush(QColor("white"))
-        self.name1.setStyleSheet("QLabel { background-color : white; }")
+        self.setBrush(QColor("white"))
+        self.name1.setStyleSheet("QLabel { background-color : rgba(200,100,120, 0%); }")
         self.name1.setAlignment(Qt.AlignCenter)
         self.name1.setFrameStyle(0)
 
@@ -146,7 +147,9 @@ class RectObject(QGraphicsRectItem):
 
         self.name1 = QLabel(text)
         self.name1.setGeometry(1, 1, 149, 99)
-        self.name1.setStyleSheet("QLabel { background-color : white; }")
+        self.name1.setWordWrap(True)
+        self.setBrush(QColor("white"))
+        self.name1.setStyleSheet("QLabel { background-color : rgba(200,100,120, 0%); }")
         self.name1.setAlignment(Qt.AlignCenter)
         self.name1.setFrameStyle(0)
 
@@ -267,10 +270,11 @@ class EllipseObject(QGraphicsEllipseItem):
         self.text = text
 
         self.name1 = QLabel(text)
-        self.name1.setGeometry(20, 20, 109, 59)
+        self.name1.setGeometry(0, 0, 150, 100)
+        self.name1.setWordWrap(True)
 
         self.setBrush(QColor("white"))
-        self.name1.setStyleSheet("QLabel { background-color : white; }")
+        self.name1.setStyleSheet("QLabel { background-color : rgba(200,100,120, 0%); }")
         self.name1.setAlignment(Qt.AlignCenter)
         self.name1.setFrameStyle(0)
 
