@@ -895,7 +895,7 @@ class MainWin(QMainWindow):
         self.toolbar = self.create_toolbar()
 
         self.start_button = QPushButton("Štart")
-        self.start_button.clicked.connect(self.start_data_model)
+        # self.start_button.clicked.connect(self.start_data_model)
         self.start_button.setMinimumSize(100, 100)
         self.mlayout.addWidget(self.start_button)
         self.delete_button = QPushButton("Vymazať text")
@@ -916,10 +916,10 @@ class MainWin(QMainWindow):
         self.text_area.setPlaceholderText("Zadajte text.")
         self.button_panel.hlayout.addWidget(self.text_area)
 
-    def start_data_model(self):
-        dmg = DataModelGenerator()
-        entities, relationships = dmg.generate_model(self.text_area.toPlainText())
-        self.view.drawObjects(entities, relationships)
+    # def start_data_model(self):
+    #     # dmg = DataModelGenerator()
+    #     # entities, relationships = dmg.generate_model(self.text_area.toPlainText())
+    #     # self.view.drawObjects(entities, relationships)
 
     def quit_app(self):
         app.quit()
