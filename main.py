@@ -27,7 +27,6 @@ class RelationshipObject(QGraphicsRectItem):
         self.align_pen.setWidth(3)
         self.align_pen.setColor(Qt.blue)
         self.name1 = QLabel(text)
-        # self.name1.setGeometry(3, 75, 105, 35)
         self.name1.setGeometry(-20, 60, 115, 80)
         self.name1.setWordWrap(True)
 
@@ -443,6 +442,38 @@ class GraphicView(QGraphicsView):
 
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
         super().drawBackground(painter, rect)
+
+    def drawObjects(self, entities, relationships):
+        self.entityObjects = []
+        self.entities = entities
+        i = 50
+        j = 100
+        j2 = 50
+        for entity in entities:
+            entityObject = RectObject(i, 200, entity.word)
+            self.entityObjects.append(entityObject)
+            i = i+200
+            self.scene.addItem(entityObject)
+            for att in entity.attributes:
+                attObject = EllipseObject(j, j2, att)
+                line = ConnectingLine(300, 300, 300, -20)
+                entityObject.addLine(line, attObject)
+                j = j + 180
+                self.scene.addItem(line)
+                self.scene.addItem(attObject)
+
+        i = 100
+        for relationship in relationships:
+            relationshipObject = RelationshipObject(i, 400, relationship.word)
+            for entity in relationship.entities:
+                for entityObject in self.entityObjects:
+                    if entity.word == entityObject.text:
+                        line = ConnectingLine(300, 300, 300, -20)
+                        entityObject.addRelLine(line, relationshipObject)
+                        self.scene.addItem(line)
+            i = i+200
+            self.scene.addItem(relationshipObject)
+
 
     def mouseReleaseEvent(self, event):
         for item in self.items():
@@ -864,22 +895,18 @@ class MainWin(QMainWindow):
         self.toolbar = self.create_toolbar()
 
         self.start_button = QPushButton("Štart")
-        self.start_button.setMinimumSize(100, 70)
+        self.start_button.clicked.connect(self.start_data_model)
+        self.start_button.setMinimumSize(100, 100)
         self.mlayout.addWidget(self.start_button)
         self.delete_button = QPushButton("Vymazať text")
-        self.delete_button.setMinimumSize(100, 70)
+        self.delete_button.setMinimumSize(100, 100)
         self.delete_button.clicked.connect(self.delete_text)
         self.mlayout.addWidget(self.delete_button)
 
-        self.exit_button = QPushButton("Ukončiť")
-        self.exit_button.setMinimumSize(100, 70)
-        self.exit_button.clicked.connect(self.quit_app)
-        self.mlayout.addWidget(self.exit_button)
 
         self.button_panel = ButtonPanel()
         self.button_panel.button_layout.addWidget(self.start_button)
         self.button_panel.button_layout.addWidget(self.delete_button)
-        self.button_panel.button_layout.addWidget(self.exit_button)
         self.mlayout.addWidget(self.button_panel)
 
         self.text_area = QPlainTextEdit(self)
@@ -888,6 +915,11 @@ class MainWin(QMainWindow):
         self.text_area.setFont(font)
         self.text_area.setPlaceholderText("Zadajte text.")
         self.button_panel.hlayout.addWidget(self.text_area)
+
+    def start_data_model(self):
+        dmg = DataModelGenerator()
+        entities, relationships = dmg.generate_model(self.text_area.toPlainText())
+        self.view.drawObjects(entities, relationships)
 
     def quit_app(self):
         app.quit()
@@ -902,8 +934,11 @@ class MainWin(QMainWindow):
         self.mode_info.setText("Mód mazania")
         if self.action_group.checkedAction() == self.delete_action:
             if self.last_checked == self.delete_action:
-                self.basic_action.setChecked(True)
-                self.trigger_basic()
+                self.delete_action.setChecked(False)
+                if self.move_action_group.checkedAction() == self.aligning_action:
+                    self.trigger_aligning()
+                else:
+                    self.trigger_basic()
             else:
                 self.last_checked = self.delete_action
                 self.view.delete()
@@ -912,8 +947,11 @@ class MainWin(QMainWindow):
         self.mode_info.setText("Mód tvorby entít")
         if self.action_group.checkedAction() == self.entity_action:
             if self.last_checked == self.entity_action:
-                self.basic_action.setChecked(True)
-                self.trigger_basic()
+                self.entity_action.setChecked(False)
+                if self.move_action_group.checkedAction() == self.aligning_action:
+                    self.trigger_aligning()
+                else:
+                    self.trigger_basic()
             else:
                 self.last_checked = self.entity_action
                 self.view.add_entity()
@@ -922,8 +960,11 @@ class MainWin(QMainWindow):
         self.mode_info.setText("Mód spájania prvkov")
         if self.action_group.checkedAction() == self.connect_line:
             if self.last_checked == self.connect_line:
-                self.basic_action.setChecked(True)
-                self.trigger_basic()
+                self.connect_line.setChecked(False)
+                if self.move_action_group.checkedAction() == self.aligning_action:
+                    self.trigger_aligning()
+                else:
+                    self.trigger_basic()
             else:
                 self.last_checked = self.connect_line
                 self.view.add_connect()
@@ -932,8 +973,11 @@ class MainWin(QMainWindow):
         self.mode_info.setText("Mód tvorby atribútov")
         if self.action_group.checkedAction() == self.attribute_action:
             if self.last_checked == self.attribute_action:
-                self.basic_action.setChecked(True)
-                self.trigger_basic()
+                self.attribute_action.setChecked(False)
+                if self.move_action_group.checkedAction() == self.aligning_action:
+                    self.trigger_aligning()
+                else:
+                    self.trigger_basic()
             else:
                 self.last_checked = self.attribute_action
                 self.view.add_attribute()
@@ -942,8 +986,11 @@ class MainWin(QMainWindow):
         self.mode_info.setText("Mód tvorby vzťahov")
         if self.action_group.checkedAction() == self.relationship_action:
             if self.last_checked == self.relationship_action:
-                self.basic_action.setChecked(True)
-                self.trigger_basic()
+                self.relationship_action.setChecked(False)
+                if self.move_action_group.checkedAction() == self.aligning_action:
+                    self.trigger_aligning()
+                else:
+                    self.trigger_basic()
             else:
                 self.last_checked = self.relationship_action
                 self.view.add_relationship()
@@ -952,8 +999,11 @@ class MainWin(QMainWindow):
         self.mode_info.setText("Mód premenovania prvkov")
         if self.action_group.checkedAction() == self.rename_action:
             if self.last_checked == self.rename_action:
-                self.basic_action.setChecked(True)
-                self.trigger_basic()
+                self.rename_action.setChecked(False)
+                if self.move_action_group.checkedAction() == self.aligning_action:
+                    self.trigger_aligning()
+                else:
+                    self.trigger_basic()
             else:
                 self.last_checked = self.rename_action
                 self.view.rename()
@@ -961,12 +1011,16 @@ class MainWin(QMainWindow):
     def trigger_basic(self):
         self.mode_info.setText("Základný mód")
         self.last_checked = self.basic_action
+        if self.action_group.checkedAction():
+            self.action_group.checkedAction().setChecked(False)
         self.view.basic()
 
     def trigger_custom(self):
         if not self.view.scene.visibility:
+            self.custom_action.setChecked(True)
             self.view.grid()
         else:
+            self.custom_action.setChecked(False)
             self.view.grid()
 
     def trigger_align(self):
@@ -974,7 +1028,7 @@ class MainWin(QMainWindow):
 
     def trigger_aligning(self):
         self.mode_info.setText(("Mód zarovnávania"))
-        if self.action_group.checkedAction() == self.aligning_action:
+        if self.move_action_group.checkedAction() == self.aligning_action:
             if self.last_checked == self.aligning_action:
                 self.basic_action.setChecked(True)
                 self.trigger_basic()
@@ -983,8 +1037,8 @@ class MainWin(QMainWindow):
                 self.view.call_aligning()
                 if self.view.grid_group:
                     self.view.grid_group.setVisible(False)
-
-
+            if self.action_group.checkedAction():
+                self.action_group.checkedAction().setChecked(False)
 
     def toolbar_actions(self):
 
@@ -1023,7 +1077,7 @@ class MainWin(QMainWindow):
 
         custom_action = QAction('Mriežka', self)
         custom_action.triggered.connect(self.trigger_custom)
-        # custom_action.setCheckable(True)
+        custom_action.setCheckable(True)
 
         aligning_action = QAction('Zarovnávanie', self)
         aligning_action.triggered.connect(self.trigger_aligning)
@@ -1050,6 +1104,10 @@ class MainWin(QMainWindow):
 
         toolbar.addAction(self.custom_action)
 
+        self.move_action_group = QActionGroup(toolbar)
+        self.move_action_group.addAction(self.aligning_action)
+        self.move_action_group.addAction(self.basic_action)
+
         self.action_group = QActionGroup(toolbar)
         self.action_group.setExclusive(True)
         self.action_group.addAction(self.entity_action)
@@ -1058,10 +1116,6 @@ class MainWin(QMainWindow):
         self.action_group.addAction(self.connect_line)
         self.action_group.addAction(self.delete_action)
         self.action_group.addAction(self.rename_action)
-        self.action_group.addAction(self.custom_action)
-        self.action_group.addAction(self.basic_action)
-        self.action_group.addAction(self.aligning_action)
-
         return toolbar
 
 
@@ -1071,8 +1125,3 @@ win.show()
 sys.exit(app.exec_())
 
 
-
-#view = GraphicView()
-
-#view.show()
-#sys.exit(app.exec_())
