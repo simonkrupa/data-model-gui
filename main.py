@@ -1,18 +1,25 @@
 import sys
 
 from PyQt5 import QtGui, QtCore
-from PyQt5.QtGui import QIcon, QFont, QColor, QPen, QPainter, QPolygonF
+from PyQt5.QtGui import QFont, QColor, QPen
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsEllipseItem, \
-    QGraphicsLineItem, QGraphicsTextItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, qApp, \
-    QListWidget, QListWidgetItem, QGraphicsItemGroup, QPushButton, QVBoxLayout, QPlainTextEdit, QTextEdit, QMessageBox, \
-    QDialog, QWidget, QHBoxLayout, QActionGroup, QGraphicsPolygonItem, QScrollBar
-from PyQt5.QtCore import Qt, QPointF, QLineF, QPoint, QSize, QRectF
+    QGraphicsLineItem, QLabel, QGraphicsProxyWidget, QLineEdit, QMainWindow, QAction, \
+    QPushButton, QVBoxLayout, QPlainTextEdit, \
+    QDialog, QWidget, QHBoxLayout, QActionGroup, QScrollBar
+from PyQt5.QtCore import Qt, QPointF
+
+RELATIONSHIP_WIDTH = 106
+RELATIONSHIP_HEIGHT = 106
+ENTITY_WIDTH = 150
+ENTITY_HEIGHT = 100
+MAIN_WINDOW_GEOMETRY_WIDTH = 1280
+MAIN_WINDOW_GEOMETRY_HEIGHT = 800
 
 
 class RelationshipObject(QGraphicsRectItem):
     def __init__(self, x, y, text):
-        self.r = 106
-        self.h = 106
+        self.r = RELATIONSHIP_WIDTH
+        self.h = RELATIONSHIP_HEIGHT
         super().__init__(0, 0, self.r, self.h)
         self.setPos(x, y)
         self.setRotation(45)
@@ -50,18 +57,16 @@ class RelationshipObject(QGraphicsRectItem):
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
 
-        orig_position = self.scenePos()
-
         updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + self.x
         updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + self.y
 
         if self.grid:
-            g_x = self.grid_x%25
-            act_x = updated_cursor_x%25
+            g_x = self.grid_x % 25
+            act_x = updated_cursor_x % 25
             g_y = self.grid_y % 25
             act_y = updated_cursor_y % 25
             if 5 >= act_x - g_x >= -5 and 5 >= act_y - g_y >= -5:
-                self.setPos(QPointF(updated_cursor_x-(act_x-g_x), updated_cursor_y-(act_y-g_y)))
+                self.setPos(QPointF(updated_cursor_x - (act_x - g_x), updated_cursor_y - (act_y - g_y)))
                 self.x = updated_cursor_x
                 self.y = updated_cursor_y
                 self.setPen(self.align_pen)
@@ -78,30 +83,28 @@ class RelationshipObject(QGraphicsRectItem):
         for line in self.lines:
             line.changeRelPos(self.x, self.y)
 
-
     def adjust_lines(self):
         for line in self.lines:
             line.changeRelPos(self.x, self.y)
 
-
     def mouseReleaseEvent(self, event):
         pass
 
-    def setLine(self, line):
+    def set_line(self, line):
         self.lines.append(line)
 
-    def getPos(self):
-        return self.x, self.y + int((self.h/2))
+    def get_pos(self):
+        return self.x, self.y + int((self.h / 2))
 
-    def setMyPosition(self, x, y):
+    def set_my_position(self, x, y):
         self.x = x
         self.y = y
 
 
-class RectObject(QGraphicsRectItem):
+class EntityObject(QGraphicsRectItem):
     def __init__(self, x, y, text):
-        self.r = 150
-        self.h = 100
+        self.r = ENTITY_WIDTH
+        self.h = ENTITY_HEIGHT
         super().__init__(0, 0, self.r, self.h)
         self.setPos(x, y)
         self.x = x
@@ -133,34 +136,34 @@ class RectObject(QGraphicsRectItem):
         self.pMyItem = QGraphicsProxyWidget(self)
         self.pMyItem.setWidget(self.name1)
         self.lines = []
-        self.relLines = []
+        self.rel_lines = []
 
-    def setMyPosition(self, x, y):
+    def set_my_position(self, x, y):
         self.x = x
         self.y = y
         self.x1 = self.x + self.r
         self.y1 = self.y + self.h
 
-    def addRelLine(self, line, rel):
-        self.relLines.append(line)
-        rel.setLine(line)
-        line.setEntity(self)
-        line.setRel(rel)
-        self.drawLine()
+    def add_rel_line(self, line, rel):
+        self.rel_lines.append(line)
+        rel.set_line(line)
+        line.set_entity(self)
+        line.set_rel(rel)
+        self.draw_line()
 
-    def addLine(self, line, att):
+    def add_line(self, line, att):
         self.lines.append(line)
-        att.setLine(line)
-        line.setEntity(self)
-        line.setAtt(att)
-        self.drawLine()
+        att.set_line(line)
+        line.set_entity(self)
+        line.set_att(att)
+        self.draw_line()
 
-    def drawLine(self):
+    def draw_line(self):
         for line in self.lines:
-            line.changePos(self.x1, self.y1-50)
+            line.changePos(self.x1, self.y1 - 50)
 
-        for relLine in self.relLines:
-            relLine.changePos(self.x1, self.y1-50)
+        for relLine in self.rel_lines:
+            relLine.changePos(self.x1, self.y1 - 50)
 
     def mousePressEvent(self, event):
         pass
@@ -169,7 +172,6 @@ class RectObject(QGraphicsRectItem):
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
 
-        orig_position = self.scenePos()
         updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + self.x
         updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + self.y
 
@@ -179,9 +181,9 @@ class RectObject(QGraphicsRectItem):
             g_y = self.grid_y % 25
             act_y = updated_cursor_y % 25
             if 10 >= act_x - g_x >= -10 and 10 >= act_y - g_y >= -10:
-                self.setPos(QPointF(updated_cursor_x-(act_x-g_x), updated_cursor_y-(act_y-g_y)))
-                self.tmp_x = updated_cursor_x-(act_x-g_x)
-                self.tmp_y = updated_cursor_y-(act_y-g_y)
+                self.setPos(QPointF(updated_cursor_x - (act_x - g_x), updated_cursor_y - (act_y - g_y)))
+                self.tmp_x = updated_cursor_x - (act_x - g_x)
+                self.tmp_y = updated_cursor_y - (act_y - g_y)
                 self.x = updated_cursor_x
                 self.y = updated_cursor_y
                 self.x1 = updated_cursor_x + self.r
@@ -201,21 +203,19 @@ class RectObject(QGraphicsRectItem):
             self.x1 = updated_cursor_x + self.r
             self.y1 = updated_cursor_y + self.h
             self.setPen(Qt.black)
-        self.drawLine()
-
-
+        self.draw_line()
 
     def mouseReleaseEvent(self, event):
         pass
 
-    def getPos(self):
-        return self.x1, self.y1-50
+    def get_pos(self):
+        return self.x1, self.y1 - 50
 
 
-class EllipseObject(QGraphicsEllipseItem):
+class AttributeObject(QGraphicsEllipseItem):
     def __init__(self, x, y, text):
-        self.r = 150
-        self.h = 100
+        self.r = ENTITY_WIDTH
+        self.h = ENTITY_HEIGHT
         super().__init__(0, 0, self.r, self.h)
         self.setPos(x, y)
         self.setAcceptHoverEvents(True)
@@ -245,15 +245,12 @@ class EllipseObject(QGraphicsEllipseItem):
         self.pMyItem = QGraphicsProxyWidget(self)
         self.pMyItem.setWidget(self.name1)
 
-
     def mousePressEvent(self, event):
         pass
 
     def mouseMoveEvent(self, event):
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
-
-        orig_position = self.scenePos()
 
         updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + self.x
         updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + self.y
@@ -264,7 +261,7 @@ class EllipseObject(QGraphicsEllipseItem):
             g_x = self.grid_x % 25
             g_y = self.grid_y % 25
             if 10 >= act_x - g_x >= -10 and 10 >= act_y - g_y >= -10:
-                self.setPos(QPointF(updated_cursor_x-(act_x-g_x), updated_cursor_y-(act_y-g_y)))
+                self.setPos(QPointF(updated_cursor_x - (act_x - g_x), updated_cursor_y - (act_y - g_y)))
                 self.x = updated_cursor_x
                 self.y = updated_cursor_y
                 self.setPen(self.align_pen)
@@ -284,13 +281,13 @@ class EllipseObject(QGraphicsEllipseItem):
     def mouseReleaseEvent(self, event):
         pass
 
-    def getPos(self):
-        return self.x, self.y + int((self.h/2))
+    def get_pos(self):
+        return self.x, self.y + int((self.h / 2))
 
-    def setLine(self, line):
+    def set_line(self, line):
         self.line = line
 
-    def setMyPosition(self, x, y):
+    def set_my_position(self, x, y):
         self.x = x
         self.y = y
 
@@ -306,7 +303,7 @@ class ConnectingLine(QGraphicsLineItem):
         self.pen.setWidth(1)
         self.setPen(self.pen)
 
-    def changePos(self, x, y):
+    def change_pos(self, x, y):
         if self.att:
             uni_x, uni_y = self.att.getPos()
             if uni_y - 50 <= y + 50 and y - 50 <= uni_y + 50 and x > uni_x:
@@ -332,40 +329,41 @@ class ConnectingLine(QGraphicsLineItem):
             else:
                 self.setLine(x, y, uni_x, uni_y)
 
-    def changeAttPos(self, att_x, att_y):
+    def change_att_pos(self, att_x, att_y):
         x, y = self.entity.getPos()
-        if y > att_y-50 and att_y+50 > y - 100 and att_x < x - 150:
-            self.setLine(x-150, y, att_x+150,att_y+50)
-        elif y > att_y-50 and att_y+50 > y - 100 and att_x > x:
-            self.setLine(x, y, att_x, att_y+50)
-        elif att_y < y-100:
-            self.setLine(x-75, y-50, att_x+75,att_y+100)
+        if y > att_y - 50 and att_y + 50 > y - 100 and att_x < x - 150:
+            self.setLine(x - 150, y, att_x + 150, att_y + 50)
+        elif y > att_y - 50 and att_y + 50 > y - 100 and att_x > x:
+            self.setLine(x, y, att_x, att_y + 50)
+        elif att_y < y - 100:
+            self.setLine(x - 75, y - 50, att_x + 75, att_y + 100)
         elif att_y > y:
-            self.setLine(x-75,y+50,att_x+75,att_y)
+            self.setLine(x - 75, y + 50, att_x + 75, att_y)
         else:
-            self.setLine(x, y, att_x, att_y+50)
+            self.setLine(x, y, att_x, att_y + 50)
 
-    def changeRelPos(self, rel_x, rel_y):
+    def change_rel_pos(self, rel_x, rel_y):
         x, y = self.entity.getPos()
-        if y > rel_y-53 and rel_y+53 > y - 150 and rel_x < x - 150:
-            self.setLine(x-150, y, rel_x+75,rel_y+75)
-        elif y > rel_y-53 and rel_y+53 > y - 150 and rel_x > x:
-            self.setLine(x, y, rel_x-75, rel_y+75)
-        elif rel_y < y-100:
-            self.setLine(x-75, y-50, rel_x,rel_y+150)
+        if y > rel_y - 53 and rel_y + 53 > y - 150 and rel_x < x - 150:
+            self.setLine(x - 150, y, rel_x + 75, rel_y + 75)
+        elif y > rel_y - 53 and rel_y + 53 > y - 150 and rel_x > x:
+            self.setLine(x, y, rel_x - 75, rel_y + 75)
+        elif rel_y < y - 100:
+            self.setLine(x - 75, y - 50, rel_x, rel_y + 150)
         elif rel_y > y:
-            self.setLine(x-75,y+50,rel_x,rel_y)
+            self.setLine(x - 75, y + 50, rel_x, rel_y)
         else:
-            self.setLine(x, y, rel_x, rel_y+50)
+            self.setLine(x, y, rel_x, rel_y + 50)
 
-    def setAtt(self, att):
+    def set_att(self, att):
         self.att = att
 
-    def setEntity(self, entity):
+    def set_entity(self, entity):
         self.entity = entity
 
-    def setRel(self, rel):
+    def set_rel(self, rel):
         self.rel = rel
+
 
 class GraphicsScene(QGraphicsScene):
     def __init__(self):
@@ -412,72 +410,12 @@ class GraphicView(QGraphicsView):
         self.setScene(self.scene)
         self.maximumViewportSize()
 
-        self.moveObject = RectObject(0, 0, "Zviera")
-        self.entity2 = RectObject(0, 0, "Clovek")
-        self.moveObject2 = EllipseObject(0, 0, "telefonne cislo")
-        self.att2 = EllipseObject(0, 0, "pohlavie")
-        self.att3 = EllipseObject(0, 0, "vek")
-        self.relationship = RelationshipObject(0, 0, "pracuje")
-
-        self.line1 = ConnectingLine(300, 300, 300, -20)
-        self.line2 = ConnectingLine(300, 300, 300, -20)
-        self.relLine = ConnectingLine(300, 300, 300, -20)
-        self.relLine2 = ConnectingLine(300, 300, 300, -20)
-
-        self.moveObject.addLine(self.line1, self.moveObject2)
-        self.moveObject.addLine(self.line2, self.att2)
-        self.moveObject.addRelLine(self.relLine, self.relationship)
-        self.entity2.addRelLine(self.relLine2, self.relationship)
-
-        self.scene.addItem(self.relLine2)
-        self.scene.addItem(self.att3)
-        self.scene.addItem(self.entity2)
-        self.scene.addItem(self.relLine)
-        self.scene.addItem(self.att2)
-        self.scene.addItem(self.line1)
-        self.scene.addItem(self.line2)
-        self.scene.addItem(self.relationship)
-        self.scene.addItem(self.moveObject)
-        self.scene.addItem(self.moveObject2)
-
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
         super().drawBackground(painter, rect)
 
-    def drawObjects(self, entities, relationships):
-        self.entityObjects = []
-        self.entities = entities
-        i = 50
-        j = 100
-        j2 = 50
-        for entity in entities:
-            entityObject = RectObject(i, 200, entity.word)
-            self.entityObjects.append(entityObject)
-            i = i+200
-            self.scene.addItem(entityObject)
-            for att in entity.attributes:
-                attObject = EllipseObject(j, j2, att)
-                line = ConnectingLine(300, 300, 300, -20)
-                entityObject.addLine(line, attObject)
-                j = j + 180
-                self.scene.addItem(line)
-                self.scene.addItem(attObject)
-
-        i = 100
-        for relationship in relationships:
-            relationshipObject = RelationshipObject(i, 400, relationship.word)
-            for entity in relationship.entities:
-                for entityObject in self.entityObjects:
-                    if entity.word == entityObject.text:
-                        line = ConnectingLine(300, 300, 300, -20)
-                        entityObject.addRelLine(line, relationshipObject)
-                        self.scene.addItem(line)
-            i = i+200
-            self.scene.addItem(relationshipObject)
-
-
     def mouseReleaseEvent(self, event):
         for item in self.items():
-            if isinstance(item, (RelationshipObject, RectObject, EllipseObject)):
+            if isinstance(item, (RelationshipObject, EntityObject, AttributeObject)):
                 item.setPen(Qt.black)
         if self.mode == 7:
             items = self.items(event.pos())
@@ -485,21 +423,21 @@ class GraphicView(QGraphicsView):
                 if isinstance(item, RelationshipObject):
                     for line in item.lines:
                         line.changeRelPos(item.pos().x(), item.pos().y())
-                if isinstance(item, (EllipseObject, RectObject)):
-                    if isinstance(item, EllipseObject):
+                if isinstance(item, (AttributeObject, EntityObject)):
+                    if isinstance(item, AttributeObject):
                         if item.line:
                             item.line.changeAttPos(item.pos().x(), item.pos().y())
-                    if isinstance(item, RectObject):
+                    if isinstance(item, EntityObject):
                         if item.lines and item.tmp_x:
                             item.setPos(item.tmp_x, item.tmp_y)
-                            item.setMyPosition(item.tmp_x, item.tmp_y)
-                        if item.relLines and item.tmp_x:
+                            item.set_my_position(item.tmp_x, item.tmp_y)
+                        if item.rel_lines and item.tmp_x:
                             item.setPos(item.tmp_x, item.tmp_y)
-                            item.setMyPosition(item.tmp_x, item.tmp_y)
-                            for l in item.relLines:
-                                l.rel.adjust_lines()
+                            item.set_my_position(item.tmp_x, item.tmp_y)
+                            for line in item.rel_lines:
+                                line.rel.adjust_lines()
                         for i in self.items():
-                            if isinstance(i, EllipseObject):
+                            if isinstance(i, AttributeObject):
                                 if i.line:
                                     i.line.changeAttPos(i.pos().x(), i.pos().y())
                             if isinstance(i, RelationshipObject):
@@ -513,45 +451,52 @@ class GraphicView(QGraphicsView):
     def mouseMoveEvent(self, event):
         if self.move_flag:
             if self.line_mouse_move is None:
-                point = QPoint(int(self.start_point.x), int(self.start_point.y))
                 end_point = self.mapToScene(event.pos())
                 if isinstance(self.start_point, RelationshipObject):
                     if self.start_point.y >= int(end_point.y()):
                         self.line_mouse_move = QGraphicsLineItem(self.start_point.x, self.start_point.y,
-                                                     int(end_point.x()),
-                                                     int(end_point.y()))
+                                                                 int(end_point.x()),
+                                                                 int(end_point.y()))
                     elif self.start_point.y + 100 <= int(end_point.y()):
                         self.line_mouse_move = QGraphicsLineItem(self.start_point.x, self.start_point.y + 140,
-                                                     int(end_point.x()),
-                                                     int(end_point.y()))
+                                                                 int(end_point.x()),
+                                                                 int(end_point.y()))
                     elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
                             end_point.y()) and self.start_point.x < int(end_point.x()):
                         self.line_mouse_move = QGraphicsLineItem(self.start_point.x + 70, self.start_point.y + 70,
-                                                     int(end_point.x()),
-                                                     int(end_point.y()))
+                                                                 int(end_point.x()),
+                                                                 int(end_point.y()))
                     elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
                             end_point.y()) and self.start_point.x >= int(end_point.x()):
                         self.line_mouse_move = QGraphicsLineItem(self.start_point.x - 70, self.start_point.y + 70,
-                                                     int(end_point.x()),
-                                                     int(end_point.y()))
+                                                                 int(end_point.x()),
+                                                                 int(end_point.y()))
                     else:
 
-                        self.line_mouse_move = QGraphicsLineItem(self.start_point.x, self.start_point.y, int(end_point.x()),
-                                                     int(end_point.y()))
+                        self.line_mouse_move = QGraphicsLineItem(self.start_point.x, self.start_point.y,
+                                                                 int(end_point.x()),
+                                                                 int(end_point.y()))
                 else:
                     if self.start_point.y >= int(end_point.y()):
-                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x)+75, int(self.start_point.y), int(end_point.x()), int(end_point.y()))
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x) + 75, int(self.start_point.y),
+                                                                 int(end_point.x()), int(end_point.y()))
                     elif self.start_point.y + 100 <= int(end_point.y()):
-                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x)+75, int(self.start_point.y)+100, int(end_point.x()),
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x) + 75,
+                                                                 int(self.start_point.y) + 100, int(end_point.x()),
                                                                  int(end_point.y()))
-                    elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(end_point.y()) and self.start_point.x < int(end_point.x()):
-                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x)+150, int(self.start_point.y)+50, int(end_point.x()),
+                    elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
+                            end_point.y()) and self.start_point.x < int(end_point.x()):
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x) + 150,
+                                                                 int(self.start_point.y) + 50, int(end_point.x()),
                                                                  int(end_point.y()))
-                    elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(end_point.y()) and self.start_point.x >= int(end_point.x()):
-                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x), int(self.start_point.y)+50, int(end_point.x()),
+                    elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
+                            end_point.y()) and self.start_point.x >= int(end_point.x()):
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x), int(self.start_point.y) + 50,
+                                                                 int(end_point.x()),
                                                                  int(end_point.y()))
                     else:
-                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x()), int(self.start_point.y()), int(end_point.x()), int(end_point.y()))
+                        self.line_mouse_move = QGraphicsLineItem(int(self.start_point.x()), int(self.start_point.y()),
+                                                                 int(end_point.x()), int(end_point.y()))
                 self.scene.addItem(self.line_mouse_move)
             else:
                 end_point = self.mapToScene(event.pos())
@@ -559,7 +504,7 @@ class GraphicView(QGraphicsView):
                 if self.prev:
                     if isinstance(self.start_point, RelationshipObject):
                         if self.start_point.y >= int(end_point.y()):
-                            self.line_mouse_move.setLine(self.start_point.x , self.start_point.y,
+                            self.line_mouse_move.setLine(self.start_point.x, self.start_point.y,
                                                          int(end_point.x()),
                                                          int(end_point.y()))
                         elif self.start_point.y + 100 <= int(end_point.y()):
@@ -581,25 +526,26 @@ class GraphicView(QGraphicsView):
                                                          int(end_point.y()))
                     else:
                         if self.start_point.y >= int(end_point.y()):
-                            self.line_mouse_move.setLine(self.start_point.x+75, self.start_point.y, int(end_point.x()),
-                                                                     int(end_point.y()))
+                            self.line_mouse_move.setLine(self.start_point.x + 75, self.start_point.y,
+                                                         int(end_point.x()),
+                                                         int(end_point.y()))
                         elif self.start_point.y + 100 <= int(end_point.y()):
-                            self.line_mouse_move.setLine(self.start_point.x+75, self.start_point.y + 100,
-                                                                     int(end_point.x()),
-                                                                     int(end_point.y()))
+                            self.line_mouse_move.setLine(self.start_point.x + 75, self.start_point.y + 100,
+                                                         int(end_point.x()),
+                                                         int(end_point.y()))
                         elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
                                 end_point.y()) and self.start_point.x < int(end_point.x()):
                             self.line_mouse_move.setLine(self.start_point.x + 150, self.start_point.y + 50,
-                                                                     int(end_point.x()),
-                                                                     int(end_point.y()))
+                                                         int(end_point.x()),
+                                                         int(end_point.y()))
                         elif int(end_point.y()) > self.start_point.y and self.start_point.y + 100 > int(
                                 end_point.y()) and self.start_point.x >= int(end_point.x()):
                             self.line_mouse_move.setLine(self.start_point.x, self.start_point.y + 50,
-                                                                     int(end_point.x()),
-                                                                     int(end_point.y()))
+                                                         int(end_point.x()),
+                                                         int(end_point.y()))
                         else:
                             self.line_mouse_move.setLine(self.start_point.x, self.start_point.y, int(end_point.x()),
-                                                                     int(end_point.y()))
+                                                         int(end_point.y()))
                 else:
                     self.scene.removeItem(self.line_mouse_move)
                     self.line_mouse_move = None
@@ -634,27 +580,27 @@ class GraphicView(QGraphicsView):
                     self.start_point = None
                     if type(self.prev) != type(item):
                         connecting_line = ConnectingLine(self.prev.x, self.prev.y, 1, 1)
-                        if isinstance(item, EllipseObject) or isinstance(self.prev, EllipseObject):
-                            if isinstance(self.prev, RectObject) and isinstance(item, EllipseObject):
+                        if isinstance(item, AttributeObject) or isinstance(self.prev, AttributeObject):
+                            if isinstance(self.prev, EntityObject) and isinstance(item, AttributeObject):
                                 if not item.line:
                                     tmp = item
                                     item = self.prev
                                     self.prev = tmp
-                                    item.addLine(connecting_line, self.prev)
+                                    item.add_line(connecting_line, self.prev)
                                     self.scene.addItem(connecting_line)
-                            elif isinstance(item, RectObject) and isinstance(self.prev, EllipseObject):
+                            elif isinstance(item, EntityObject) and isinstance(self.prev, AttributeObject):
                                 if not self.prev.line:
-                                    item.addLine(connecting_line, self.prev)
+                                    item.add_line(connecting_line, self.prev)
                                     self.scene.addItem(connecting_line)
                         elif isinstance(item, RelationshipObject) or isinstance(self.prev, RelationshipObject):
-                            if isinstance(self.prev, RectObject) and isinstance(item, RelationshipObject):
+                            if isinstance(self.prev, EntityObject) and isinstance(item, RelationshipObject):
                                 tmp = item
                                 item = self.prev
                                 self.prev = tmp
-                                item.addRelLine(connecting_line, self.prev)
+                                item.add_rel_line(connecting_line, self.prev)
                                 self.scene.addItem(connecting_line)
-                            elif isinstance(item, RectObject) and isinstance(self.prev, RelationshipObject):
-                                item.addRelLine(connecting_line, self.prev)
+                            elif isinstance(item, EntityObject) and isinstance(self.prev, RelationshipObject):
+                                item.add_rel_line(connecting_line, self.prev)
                                 self.scene.addItem(connecting_line)
                         self.prev = None
                     else:
@@ -673,15 +619,15 @@ class GraphicView(QGraphicsView):
                 if isinstance(item, ConnectingLine):
                     if item.att:
                         item.att.line = None
-                if isinstance(item, EllipseObject):
+                if isinstance(item, AttributeObject):
                     if item.line:
                         self.scene.removeItem(item.line)
-                elif isinstance(item, RectObject):
+                elif isinstance(item, EntityObject):
                     if item.lines:
                         for i in item.lines:
                             self.scene.removeItem(i)
-                    if item.relLines:
-                        for r in item.relLines:
+                    if item.rel_lines:
+                        for r in item.rel_lines:
                             self.scene.removeItem(r)
                 elif isinstance(item, RelationshipObject):
                     if item.lines:
@@ -689,24 +635,24 @@ class GraphicView(QGraphicsView):
                             self.scene.removeItem(i)
                 self.scene.removeItem(item)
         elif self.mode == 1:
-            entity_object = RectObject(0, 0, "")
+            entity_object = EntityObject(0, 0, "")
             point = self.mapToScene(event.pos())
             entity_object.setPos(point.x(), point.y())
             self.scene.addItem(entity_object)
-            entity_object.setMyPosition(point.x(), point.y())
+            entity_object.set_my_position(point.x(), point.y())
 
         elif self.mode == 2:
-            att_object = EllipseObject(0, 0, "")
+            att_object = AttributeObject(0, 0, "")
             point = self.mapToScene(event.pos())
             self.scene.addItem(att_object)
             att_object.setPos(point)
-            att_object.setMyPosition(point.x(), point.y())
+            att_object.set_my_position(point.x(), point.y())
         elif self.mode == 3:
             rel_object = RelationshipObject(0, 0, "")
             point = self.mapToScene(event.pos())
             self.scene.addItem(rel_object)
             rel_object.setPos(point)
-            rel_object.setMyPosition(point.x(), point.y())
+            rel_object.set_my_position(point.x(), point.y())
         elif self.mode == 6:
             item = self.items(event.pos())
             if item:
@@ -715,7 +661,7 @@ class GraphicView(QGraphicsView):
                 if isinstance(item[0], QGraphicsProxyWidget):
                     item = item[0]
                 else:
-                    if len(item)<2:
+                    if len(item) < 2:
                         item = item[0]
                     else:
                         item = item[1]
@@ -766,7 +712,7 @@ class GraphicView(QGraphicsView):
         self.mode = 0
         r = self.scene.items()
         for item in r:
-            if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
+            if isinstance(item, (EntityObject, AttributeObject, RelationshipObject)):
                 item.grid = False
         if not self.grid_flag:
             self.grid()
@@ -776,7 +722,7 @@ class GraphicView(QGraphicsView):
         r = self.scene.items()
         for item in r:
 
-            if isinstance(item, (RectObject, EllipseObject, RelationshipObject)):
+            if isinstance(item, (EntityObject, AttributeObject, RelationshipObject)):
                 item.grid = True
                 item.grid_x = self.scene.x_min
                 item.grid_y = self.scene.y_min
@@ -790,9 +736,7 @@ class GraphicView(QGraphicsView):
             self.scene.update()
 
     def t_align(self):
-        if self.grid_flag:
-            print("aaa")
-        else:
+        if not self.grid_flag:
             items = self.scene.items()
             for item in items:
                 if isinstance(item, RelationshipObject):
@@ -800,20 +744,19 @@ class GraphicView(QGraphicsView):
                     new_x = item.pos().x() + (self.grid_point_x.x() % 25 - item.pos().x() % 25)
                     new_y = item.pos().y() + (self.grid_point_y.y() % 25 - item.pos().y() % 25)
                     item.setPos(new_x, new_y)
-                    item.setMyPosition(new_x, new_y)
+                    item.set_my_position(new_x, new_y)
                     item.adjust_lines()
-                if isinstance(item, (EllipseObject, RectObject)):
+                if isinstance(item, (AttributeObject, EntityObject)):
                     new_x = item.pos().x() + (self.grid_point_x.x() % 25 - item.pos().x() % 25)
                     new_y = item.pos().y() + (self.grid_point_y.y() % 25 - item.pos().y() % 25)
                     item.setPos(new_x, new_y)
-                    item.setMyPosition(new_x, new_y)
-                    if isinstance(item, RectObject):
+                    item.set_my_position(new_x, new_y)
+                    if isinstance(item, EntityObject):
                         if item.lines:
-                            item.drawLine()
-                        if item.relLines:
-                            for l in item.relLines:
-                                l.adjust_lines()
-
+                            item.draw_line()
+                        if item.rel_lines:
+                            for line in item.rel_lines:
+                                line.adjust_lines()
 
 
 class QTextBox(object):
@@ -869,18 +812,18 @@ class MainWin(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Generátor dátového modelu")
-        self.setGeometry(0, 0, 1280, 800)
+        self.setGeometry(0, 0, MAIN_WINDOW_GEOMETRY_WIDTH, MAIN_WINDOW_GEOMETRY_HEIGHT)
 
         self.mlayout = QVBoxLayout()
         self.mlayout.setSpacing(10)
-        self.mlayout.setContentsMargins(0,5,0,0)
+        self.mlayout.setContentsMargins(0, 5, 0, 0)
         self.widget = QWidget()
         self.widget.setLayout(self.mlayout)
         self.setCentralWidget(self.widget)
 
         self.view = GraphicView(self)
         self.mlayout.addWidget(self.view, 2)
-
+        self.move_action_group = None
         self.action_group = None
         self.last_checked = None
 
@@ -891,18 +834,18 @@ class MainWin(QMainWindow):
         self.mode_info.setFont(font)
         self.mlayout.addWidget(self.mode_info)
 
-        self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, self.rename_action, self.basic_action, self.custom_action, self.aligning_action, self.clear_action = self.toolbar_actions()
+        self.entity_action, self.attribute_action, self.relationship_action, self.connect_line, self.delete_action, \
+            self.rename_action, self.basic_action, self.custom_action, \
+            self.aligning_action, self.clear_action = self.toolbar_actions()
         self.toolbar = self.create_toolbar()
 
         self.start_button = QPushButton("Štart")
-        # self.start_button.clicked.connect(self.start_data_model)
         self.start_button.setMinimumSize(100, 100)
         self.mlayout.addWidget(self.start_button)
         self.delete_button = QPushButton("Vymazať text")
         self.delete_button.setMinimumSize(100, 100)
         self.delete_button.clicked.connect(self.delete_text)
         self.mlayout.addWidget(self.delete_button)
-
 
         self.button_panel = ButtonPanel()
         self.button_panel.button_layout.addWidget(self.start_button)
@@ -915,11 +858,6 @@ class MainWin(QMainWindow):
         self.text_area.setFont(font)
         self.text_area.setPlaceholderText("Zadajte text.")
         self.button_panel.hlayout.addWidget(self.text_area)
-
-    # def start_data_model(self):
-    #     # dmg = DataModelGenerator()
-    #     # entities, relationships = dmg.generate_model(self.text_area.toPlainText())
-    #     # self.view.drawObjects(entities, relationships)
 
     def quit_app(self):
         app.quit()
@@ -1027,7 +965,7 @@ class MainWin(QMainWindow):
         self.view.t_align()
 
     def trigger_aligning(self):
-        self.mode_info.setText(("Mód zarovnávania"))
+        self.mode_info.setText("Mód zarovnávania")
         if self.move_action_group.checkedAction() == self.aligning_action:
             if self.last_checked == self.aligning_action:
                 self.basic_action.setChecked(True)
@@ -1083,7 +1021,8 @@ class MainWin(QMainWindow):
         aligning_action.triggered.connect(self.trigger_aligning)
         aligning_action.setCheckable(True)
 
-        return entity_action, attribute_action, relationship_action, connect_line, delete_action, rename_action, basic_action, custom_action, aligning_action, clear_action
+        return entity_action, attribute_action, relationship_action, connect_line, delete_action,\
+            rename_action, basic_action, custom_action, aligning_action, clear_action
 
     def create_toolbar(self):
         toolbar = self.addToolBar('TB')
@@ -1123,5 +1062,3 @@ app = QApplication(sys.argv)
 win = MainWin()
 win.show()
 sys.exit(app.exec_())
-
-
