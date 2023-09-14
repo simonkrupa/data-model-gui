@@ -33,17 +33,17 @@ class RelationshipObject(QGraphicsRectItem):
         self.align_pen = QPen()
         self.align_pen.setWidth(3)
         self.align_pen.setColor(Qt.blue)
-        self.name1 = QLabel(text)
-        self.name1.setGeometry(-20, 60, 115, 80)
-        self.name1.setWordWrap(True)
+        self.name = QLabel(text)
+        self.name.setGeometry(-20, 60, 115, 80)
+        self.name.setWordWrap(True)
 
         self.setBrush(QColor("white"))
-        self.name1.setStyleSheet("QLabel { background-color : rgba(200,100,120, 0%); }")
-        self.name1.setAlignment(Qt.AlignCenter)
-        self.name1.setFrameStyle(0)
+        self.name.setStyleSheet("QLabel { background-color : rgba(200,100,120, 0%); }")
+        self.name.setAlignment(Qt.AlignCenter)
+        self.name.setFrameStyle(0)
 
         self.pMyItem = QGraphicsProxyWidget(self)
-        self.pMyItem.setWidget(self.name1)
+        self.pMyItem.setWidget(self.name)
 
         self.pMyItem.setRotation(-45)
 
@@ -85,7 +85,7 @@ class RelationshipObject(QGraphicsRectItem):
 
     def adjust_lines(self):
         for line in self.lines:
-            line.changeRelPos(self.x, self.y)
+            line.change_rel_pos(self.x, self.y)
 
     def mouseReleaseEvent(self, event):
         pass
@@ -125,16 +125,16 @@ class EntityObject(QGraphicsRectItem):
         self.grid_x = None
         self.grid_y = None
 
-        self.name1 = QLabel(text)
-        self.name1.setGeometry(1, 1, 149, 99)
-        self.name1.setWordWrap(True)
+        self.name = QLabel(text)
+        self.name.setGeometry(1, 1, 149, 99)
+        self.name.setWordWrap(True)
         self.setBrush(QColor("white"))
-        self.name1.setStyleSheet("QLabel { background-color : rgba(200,100,120, 0%); }")
-        self.name1.setAlignment(Qt.AlignCenter)
-        self.name1.setFrameStyle(0)
+        self.name.setStyleSheet("QLabel { background-color : rgba(200,100,120, 0%); }")
+        self.name.setAlignment(Qt.AlignCenter)
+        self.name.setFrameStyle(0)
 
         self.pMyItem = QGraphicsProxyWidget(self)
-        self.pMyItem.setWidget(self.name1)
+        self.pMyItem.setWidget(self.name)
         self.lines = []
         self.rel_lines = []
 
@@ -160,10 +160,10 @@ class EntityObject(QGraphicsRectItem):
 
     def draw_line(self):
         for line in self.lines:
-            line.changePos(self.x1, self.y1 - 50)
+            line.change_pos(self.x1, self.y1 - 50)
 
-        for relLine in self.rel_lines:
-            relLine.changePos(self.x1, self.y1 - 50)
+        for rel_line in self.rel_lines:
+            rel_line.change_pos(self.x1, self.y1 - 50)
 
     def mousePressEvent(self, event):
         pass
@@ -276,7 +276,7 @@ class AttributeObject(QGraphicsEllipseItem):
             self.y = updated_cursor_y
             self.setPen(Qt.black)
         if self.line:
-            self.line.changeAttPos(self.x, self.y)
+            self.line.change_att_pos(self.x, self.y)
 
     def mouseReleaseEvent(self, event):
         pass
