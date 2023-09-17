@@ -81,7 +81,7 @@ class RelationshipObject(QGraphicsRectItem):
             self.y = updated_cursor_y
             self.setPen(Qt.black)
         for line in self.lines:
-            line.changeRelPos(self.x, self.y)
+            line.change_rel_pos(self.x, self.y)
 
     def adjust_lines(self):
         for line in self.lines:
@@ -305,7 +305,7 @@ class ConnectingLine(QGraphicsLineItem):
 
     def change_pos(self, x, y):
         if self.att:
-            uni_x, uni_y = self.att.getPos()
+            uni_x, uni_y = self.att.get_pos()
             if uni_y - 50 <= y + 50 and y - 50 <= uni_y + 50 and x > uni_x:
                 self.setLine(x - 150, y, uni_x + 150, uni_y)
             elif uni_y - 50 <= y + 50 and y - 50 <= uni_y + 50 and x < uni_x:
@@ -317,7 +317,7 @@ class ConnectingLine(QGraphicsLineItem):
             else:
                 self.setLine(x, y, uni_x, uni_y)
         elif self.rel:
-            uni_x, uni_y = self.rel.getPos()
+            uni_x, uni_y = self.rel.get_pos()
             if uni_y - 50 <= y + 50 and y - 50 <= uni_y + 50 and x > uni_x:
                 self.setLine(x - 150, y, uni_x + 75, uni_y + 23)
             elif uni_y - 50 <= y + 50 and y - 50 <= uni_y + 50 and x < uni_x:
@@ -330,7 +330,7 @@ class ConnectingLine(QGraphicsLineItem):
                 self.setLine(x, y, uni_x, uni_y)
 
     def change_att_pos(self, att_x, att_y):
-        x, y = self.entity.getPos()
+        x, y = self.entity.get_pos()
         if y > att_y - 50 and att_y + 50 > y - 100 and att_x < x - 150:
             self.setLine(x - 150, y, att_x + 150, att_y + 50)
         elif y > att_y - 50 and att_y + 50 > y - 100 and att_x > x:
@@ -343,7 +343,7 @@ class ConnectingLine(QGraphicsLineItem):
             self.setLine(x, y, att_x, att_y + 50)
 
     def change_rel_pos(self, rel_x, rel_y):
-        x, y = self.entity.getPos()
+        x, y = self.entity.get_pos()
         if y > rel_y - 53 and rel_y + 53 > y - 150 and rel_x < x - 150:
             self.setLine(x - 150, y, rel_x + 75, rel_y + 75)
         elif y > rel_y - 53 and rel_y + 53 > y - 150 and rel_x > x:
@@ -422,11 +422,11 @@ class GraphicView(QGraphicsView):
             for item in items:
                 if isinstance(item, RelationshipObject):
                     for line in item.lines:
-                        line.changeRelPos(item.pos().x(), item.pos().y())
+                        line.change_rel_pos(item.pos().x(), item.pos().y())
                 if isinstance(item, (AttributeObject, EntityObject)):
                     if isinstance(item, AttributeObject):
                         if item.line:
-                            item.line.changeAttPos(item.pos().x(), item.pos().y())
+                            item.line.change_att_pos(item.pos().x(), item.pos().y())
                     if isinstance(item, EntityObject):
                         if item.lines and item.tmp_x:
                             item.setPos(item.tmp_x, item.tmp_y)
@@ -439,10 +439,10 @@ class GraphicView(QGraphicsView):
                         for i in self.items():
                             if isinstance(i, AttributeObject):
                                 if i.line:
-                                    i.line.changeAttPos(i.pos().x(), i.pos().y())
+                                    i.line.change_att_pos(i.pos().x(), i.pos().y())
                             if isinstance(i, RelationshipObject):
                                 for line in i.lines:
-                                    line.changeRelPos(i.pos().x(), i.pos().y())
+                                    line.change_rel_pos(i.pos().x(), i.pos().y())
 
         if self.mode == 0:
             self.align = False
